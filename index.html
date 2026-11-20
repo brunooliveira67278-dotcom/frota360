@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frota 360</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f7;color:#173b46}
+header{background:#087d83;color:white;padding:22px}
+header h1{margin:0;font-size:27px}
+header p{margin:7px 0 0;font-size:13px}
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px;background:white}
+button{border:0;border-radius:7px;padding:12px 16px;cursor:pointer;font-weight:bold}
+nav button{background:#e7f1f2;color:#12666b}
+nav button.active,.primary{background:#07868a;color:white}
+main{max-width:1050px;margin:22px auto;padding:0 15px}
+.panel{background:white;border-radius:12px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px #0000000a}
+h2{margin-top:0;color:#087d83}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+label{display:block;font-size:13px;font-weight:bold;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #ccd9dc;border-radius:7px;font-size:15px;background:white}
+.check{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid #eee}
+.check input{width:auto}
+.check label{margin:0;font-weight:normal}
+.vehicle{border:1px solid #dce6e8;padding:14px;border-radius:9px;margin:10px 0}
+.vehicle img{width:100%;max-width:230px;border-radius:8px;margin-top:10px}
+.badge{display:inline-block;padding:5px 9px;border-radius:5px;background:#e0f3e8;color:#167244;font-size:12px}
+.badge.bad{background:#ffe6e6;color:#b42318}
+.stat{background:#eaf5f5;border-radius:10px;padding:18px}
+.stat strong{font-size:27px;display:block;color:#087d83}
+.hidden{display:none}
+footer{text-align:center;padding:25px;color:#72858a;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>🚘 FROTA 360</h1>
+<p>Gestão inteligente de veículos e conformidades</p>
+</header>
+
+<nav>
+<button class="active" onclick="show('inicio',this)">Início</button>
+<button onclick="show('veiculos',this)">Veículos</button>
+<button onclick="show('cadastro',this)">Cadastrar veículo</button>
+<button onclick="show('equipe',this)">Equipe</button>
+</nav>
+
+<main>
+<section id="inicio">
+<div class="panel">
+<h2>Painel de controle</h2>
+<p>Bem-vindo ao Frota 360!</p>
+<div class="grid">
+<div class="stat"><strong id="total">0</strong>Veículos cadastrados</div>
+<div class="stat"><strong id="conformes">0</strong>Conformes</div>
+<div class="stat"><strong id="naoConformes">0</strong>Não conformes</div>
+</div>
+</div>
+<div class="panel">
+<h2>Últimos registros</h2>
+<div id="recentes">Nenhum veículo cadastrado.</div>
+</div>
+</section>
+
+<section id="veiculos" class="hidden">
+<div class="panel">
+<h2>Veículos cadastrados</h2>
+<div id="lista">Nenhum veículo cadastrado.</div>
+</div>
+</section>
+
+<section id="cadastro" class="hidden">
+<div class="panel">
+<h2>Cadastro e inspeção do veículo</h2>
+<form id="formVeiculo">
+<div class="grid">
+<div>
+<label>Empresa</label>
+<select id="empresa">
+<option>Águas do Rio</option>
+</select>
+</div>
+<div>
+<label>Placa do veículo</label>
+<input id="placa" placeholder="ABC1D23" required>
+</div>
+<div>
+<label>Modelo do veículo</label>
+<input id="modelo" placeholder="Ex.: Fiat Strada" required>
+</div>
+<div>
+<label>Líder responsável</label>
+<input id="lider" placeholder="Nome do líder" required>
+</div>
+<div>
+<label>Colaborador 1</label>
+<input id="colab1" placeholder="Nome do colaborador">
+</div>
+<div>
+<label>Colaborador 2</label>
+<input id="colab2" placeholder="Nome do colaborador">
+</div>
+</div>
+
+<h2 style="margin-top:25px">Registro fotográfico</h2>
+<label>Fotos do veículo (pode selecionar mais de uma)</label>
+<input type="file" id="fotos" accept="image/*" capture="environment" multiple>
+
+<h2 style="margin-top:25px">Checklist de inspeção</h2>
+<p>Classifique cada item como conforme ou não conforme.</p>
+<div id="checklist"></div>
+
+<label>Observações e não conformidades</label>
+<textarea id="observacoes" rows="4" placeholder="Descreva os problemas identificados..."></textarea>
+
+<button class="primary" type="submit" style="margin-top:18px;width:100%">SALVAR CADASTRO</button>
+</form>
+</div>
+</section>
+
+<section id="equipe" class="hidden">
+<div class="panel">
+<h2>Cadastro de equipe</h2>
+<p>Área para organizar líderes e colaboradores.</p>
+<p>O cadastro de equipes será ampliado nas próximas etapas.</p>
+</div>
+</section>
+</main>
+
+<footer>FROTA 360 • Sistema de gestão de frota</footer>
+
+<script>
+const itens=[
+"Estado dos pneus",
+"Faróis e lanternas",
+"Retrovisores",
+"Para-brisa e vidros",
+"Limpeza e organização",
+"Estepe",
+"Macaco",
+"Chave de roda",
+"Triângulo de sinalização"
+];
+
+const checklist=document.getElementById("checklist");
+itens.forEach((item,i)=>{
+checklist.innerHTML+=`
+<div class="check">
+<label for="item${i}">${item}</label>
+<select id="item${i}" required style="max-width:160px;margin-left:auto">
+<option value="">Selecione</option>
+<option>Conforme</option>
+<option>Não conforme</option>
+</select>
+</div>`;
+});
+
+function show(id,btn){
+document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+btn.classList.add("active");
+}
+
+function getData(){
+try{return JSON.parse(localStorage.getItem("frota360")||"[]")}
+catch(e){return []}
+}
+
+function atualizar(){
+const dados=getData();
+const conformes=dados.filter(v=>v.status==="Conforme").length;
+document.getElementById("total").textContent=dados.length;
+document.getElementById("conformes").textContent=conformes;
+document.getElementById("naoConformes").textContent=dados.length-conformes;
+
+const html=dados.map((v,i)=>`
+<div class="vehicle">
+<strong>${v.placa} - ${v.modelo}</strong><br>
+Líder: ${v.lider}<br>
+<span class="badge ${v.status==="Conforme"?"":"bad"}">${v.status}</span>
+${v.fotos.map(f=>`<img src="${f}" alt="Foto do veículo">`).join("")}
+<p>${v.observacoes||""}</p>
+<button onclick="excluir(${i})">Excluir registro</button>
+</div>`).join("");
+
+document.getElementById("lista").innerHTML=html||"Nenhum veículo cadastrado.";
+document.getElementById("recentes").innerHTML=html||"Nenhum veículo cadastrado.";
+}
+
+document.getElementById("formVeiculo").addEventListener("submit",async function(e){
+e.preventDefault();
+const selects=itens.map((item,i)=>document.getElementById("item"+i).value);
+if(selects.some(v=>!v)){
+alert("Preencha todos os itens do checklist.");
+return;
+}
+const arquivos=[...document.getElementById("fotos").files];
+const fotos=await Promise.all(arquivos.map(f=>new Promise(resolve=>{
+const reader=new FileReader();
+reader.onload=()=>resolve(reader.result);
+reader.readAsDataURL(f);
+})));
+
+const dados=getData();
+dados.unshift({
+empresa:document.getElementById("empresa").value,
+placa:document.getElementById("placa").value.toUpperCase(),
+modelo:document.getElementById("modelo").value,
+lider:document.getElementById("lider").value,
+colab1:document.getElementById("colab1").value,
+colab2:document.getElementById("colab2").value,
+itens:selects,
+status:selects.every(v=>v==="Conforme")?"Conforme":"Não conforme",
+observacoes:document.getElementById("observacoes").value,
+fotos:fotos
+});
+try{
+localStorage.setItem("frota360",JSON.stringify(dados));
+this.reset();
+atualizar();
+alert("Veículo cadastrado com sucesso!");
+show("veiculos",document.querySelectorAll("nav button")[1]);
+}catch(err){
+alert("Não foi possível salvar. Tente utilizar fotos menores.");
+}
+});
+
+function excluir(i){
+if(confirm("Deseja excluir este registro?")){
+const dados=getData();
+dados.splice(i,1);
+localStorage.setItem("frota360",JSON.stringify(dados));
+atualizar();
+}
+}
+atualizar();
+</script>
+</body>
+</html>
