@@ -1,46 +1,623 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Frota 360 | Águas do Rio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#b42318}.hidden{display:none!important}.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}.brand h1{font-size:22px;margin:5px 0 0}.brand .product{font-size:13px;color:#d5edf2}.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}.login{max-width:430px;margin:50px auto}.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}.muted{color:var(--muted);font-size:14px}.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#385365}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}.field textarea{min-height:75px;resize:vertical}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button{background:#e8f1f5;color:var(--navy)}.tabs button.active{background:var(--blue);color:white}.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.item h3{margin:0 0 10px;font-size:16px}.choices{display:flex;gap:10px;flex-wrap:wrap}.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}.choices input{margin-right:5px}.item input[type=file]{max-width:100%;font-size:13px}.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}.error{background:#fff0ef;color:var(--red)}.success{background:#eaf7f0;color:var(--green)}.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.record h3{margin:0 0 5px}.record img{width:110px;height:90px;object-fit:cover;border-radius:8px;margin:6px 6px 0 0}.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}.pill.bad{background:#ffeded;color:#a51d16}.pill.good{background:#e8f7ef;color:#16794b}.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}@media(max-width:650px){.grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}}
-</style></head>
+:root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b;--orange:#a15c00}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}
+button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#e8f1f5;color:var(--navy)}
+button.danger{background:#b42318}
+.hidden{display:none!important}
+.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}
+.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}
+.brand h1{font-size:22px;margin:5px 0 0}
+.brand .product{font-size:13px;color:#d5edf2}
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}
+.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}
+.login{max-width:430px;margin:50px auto}
+.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}
+.muted{color:var(--muted);font-size:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}
+.field label{font-size:13px;font-weight:700;color:#385365}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}
+.field textarea{min-height:75px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.tabs button{background:#e8f1f5;color:var(--navy)}
+.tabs button.active{background:var(--blue);color:white}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.item h3{margin:0 0 10px;font-size:16px}
+.choices{display:flex;gap:10px;flex-wrap:wrap}
+.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}
+.choices input{margin-right:5px}
+.item input[type=file]{max-width:100%;font-size:13px}
+.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}
+.error{background:#fff0ef;color:var(--red)}
+.success{background:#eaf7f0;color:var(--green)}
+.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
+.record h3{margin:0 0 5px}
+.record img{width:110px;height:90px;object-fit:cover;border-radius:8px;margin:6px 6px 0 0}
+.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}
+.pill.bad{background:#ffeded;color:#a51d16}
+.pill.good{background:#e8f7ef;color:#16794b}
+.pill.pending{background:#fff4df;color:#925400}
+.counter{font-size:25px;font-weight:800;color:var(--navy)}
+.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}
+.small-btn{padding:7px 10px;font-size:12px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}}
+</style>
+</head>
 <body>
-<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>FROTA 360</h1><div class="product">Gestão de Frota · Inspeção · Controle · Gestão</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
+
+<header class="top">
+ <div class="brand">
+  <div>
+   <small>ÁGUAS DO RIO</small>
+   <h1>FROTA 360</h1>
+   <div class="product">Gestão de Frota · Inspeção · Controle · Gestão</div>
+  </div>
+  <div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div>
+ </div>
+</header>
+
 <main class="wrap">
-<section id="loginView" class="panel login"><h2>Acessar o Frota 360</h2><p class="muted">Entre com seu e-mail e senha cadastrados.</p><form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div><button style="width:100%" type="submit">Entrar</button></form><div id="loginMsg" class="status hidden"></div></section>
+
+<!-- FORMULÁRIO PÚBLICO DAS EQUIPES -->
+<section id="publicView" class="hidden">
+ <div class="panel">
+  <h2>Checklist diário de veículos</h2>
+  <p class="muted">Águas do Rio · Preencha todos os dados e verifique os nove itens do veículo.</p>
+  <div id="publicMsg" class="status hidden"></div>
+  <form id="publicForm">
+   <div class="grid">
+    <div class="field">
+     <label>Empresa</label>
+     <input value="Águas do Rio" readonly>
+    </div>
+    <div class="field">
+     <label>Equipe / Código da equipe *</label>
+     <input id="pubTeam" placeholder="Ex.: RIOSETCS-001" required>
+    </div>
+    <div class="field">
+     <label>Veículo / Placa *</label>
+     <input id="pubVehicle" placeholder="Digite a placa ou identificação" required>
+    </div>
+    <div class="field">
+     <label>Líder responsável *</label>
+     <input id="pubLeader" required>
+    </div>
+    <div class="field">
+     <label>Colaborador 1</label>
+     <input id="pubCollab1">
+    </div>
+    <div class="field">
+     <label>Colaborador 2</label>
+     <input id="pubCollab2">
+    </div>
+   </div>
+   <p class="muted">Data e horário do envio serão registrados automaticamente.</p>
+   <div id="publicChecklist"></div>
+   <button type="submit" id="publicSubmit">Enviar checklist</button>
+  </form>
+ </div>
+</section>
+
+<!-- LOGIN -->
+<section id="loginView" class="panel login">
+ <h2>Acessar o Frota 360</h2>
+ <p class="muted">Entre com seu e-mail e senha cadastrados.</p>
+ <form id="loginForm">
+  <div class="field">
+   <label for="email">E-mail</label>
+   <input id="email" type="email" autocomplete="username" required>
+  </div>
+  <div class="field">
+   <label for="password">Senha</label>
+   <input id="password" type="password" autocomplete="current-password" required>
+  </div>
+  <button style="width:100%" type="submit">Entrar</button>
+ </form>
+ <div id="loginMsg" class="status hidden"></div>
+</section>
+
+<!-- ÁREA AUTENTICADA -->
 <section id="appView" class="hidden">
-<div class="panel"><div class="bar"><div><h2 id="welcome">Bem-vindo</h2><div class="muted" id="roleText"></div></div><button class="secondary" id="logoutBtn">Sair</button></div><div id="appMsg" class="status hidden"></div></div>
-<div id="inspectorArea" class="panel hidden"><h2>Nova inspeção</h2><p class="muted">Preencha os dados do veículo e verifique cada item. Cada item permite anexar uma foto.</p>
-<form id="inspectionForm"><div class="grid"><div class="field"><label>Empresa</label><input id="company" value="Águas do Rio" required></div><div class="field"><label>Veículo</label><select id="vehicleSelect" required><option value="">Selecione o veículo</option></select></div><div class="field"><label>Líder responsável</label><input id="leader" required></div><div class="field"><label>Colaborador 1</label><input id="collab1"></div><div class="field"><label>Colaborador 2</label><input id="collab2"></div><div class="field"><label>Data da inspeção</label><input id="inspectionDate" type="date" required></div></div>
-<div id="checklist"></div><button type="submit" id="submitInspection">Enviar inspeção</button></form></div>
-<div id="adminArea" class="hidden">
-<div class="panel"><h2>Painel administrativo</h2><div class="muted">Registros de inspeção e não conformidades.</div><div class="tabs"><button class="active" data-tab="history">Histórico</button><button data-tab="vehicles">Veículos</button><button data-tab="users">Usuários</button></div>
-<div id="tab-history"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div><div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div></div>
-<div id="tab-vehicles" class="hidden"><h3>Cadastrar veículo</h3><form id="vehicleForm"><div class="grid"><div class="field"><label>Empresa</label><input id="vehicleCompany" value="Águas do Rio" required></div><div class="field"><label>Identificação do veículo (placa)</label><input id="plate" placeholder="Ex.: ABC1D23" required></div></div><button type="submit">Cadastrar veículo</button></form><div id="vehicleList" style="margin-top:15px"></div></div>
-<div id="tab-users" class="hidden"><h3>Cadastro de usuários</h3><p class="muted">Por segurança, a criação de contas será feita pelo administrador no painel de autenticação do Supabase nesta primeira versão. Não colocamos uma chave secreta no navegador.</p><ol class="muted"><li>No Supabase, abra Authentication → Users.</li><li>Clique em Add user e informe e-mail e senha.</li><li>O perfil será criado automaticamente como inspetor.</li><li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li></ol></div>
-</div></div>
-</section></main><div class="footer">Frota 360 · Águas do Rio</div>
+ <div class="panel">
+  <div class="bar">
+   <div>
+    <h2 id="welcome">Bem-vindo</h2>
+    <div class="muted" id="roleText"></div>
+   </div>
+   <button class="secondary" id="logoutBtn">Sair</button>
+  </div>
+  <div id="appMsg" class="status hidden"></div>
+ </div>
+
+ <!-- PAINEL DO INSPETOR -->
+ <div id="inspectorArea" class="hidden">
+  <div class="panel">
+   <h2>Monitoramento das equipes</h2>
+   <p class="muted">Cadastre as equipes previstas para o dia e acompanhe os checklists recebidos.</p>
+   <form id="dailyTeamsForm">
+    <div class="grid">
+     <div class="field">
+      <label>Data da programação</label>
+      <input type="date" id="expectedDate" required>
+     </div>
+     <div class="field">
+      <label>Equipes previstas (uma por linha)</label>
+      <textarea id="expectedTeams" placeholder="RIOSETCS-001&#10;RIOSETCS-002&#10;RIOCOMCS-001" required></textarea>
+     </div>
+    </div>
+    <button type="submit" id="saveTeamsBtn">Salvar equipes previstas</button>
+   </form>
+  </div>
+
+  <div class="panel">
+   <div class="bar">
+    <h2>Acompanhamento diário</h2>
+    <button class="secondary" id="refreshInspector">Atualizar painel</button>
+   </div>
+   <div class="grid">
+    <div class="record">
+     <div class="muted">Equipes previstas</div>
+     <div class="counter" id="countExpected">0</div>
+    </div>
+    <div class="record">
+     <div class="muted">Checklists recebidos</div>
+     <div class="counter" id="countCompleted">0</div>
+    </div>
+   </div>
+   <div class="record">
+    <div class="muted">Pendentes</div>
+    <div class="counter" id="countPending">0</div>
+   </div>
+   <div id="teamStatusList" class="muted">Selecione a data e atualize o painel.</div>
+  </div>
+
+  <div class="panel">
+   <div class="bar">
+    <h2>Checklists recebidos</h2>
+    <button class="secondary" id="refreshInspectorRecords">Atualizar</button>
+   </div>
+   <div id="inspectorRecords" class="muted">Carregando registros...</div>
+  </div>
+ </div>
+
+ <!-- PAINEL DO ADMINISTRADOR -->
+ <div id="adminArea" class="hidden">
+  <div class="panel">
+   <h2>Painel administrativo</h2>
+   <div class="muted">Histórico completo de inspeções e gestão de usuários.</div>
+   <div class="tabs">
+    <button class="active" data-tab="history">Histórico</button>
+    <button data-tab="users">Usuários</button>
+   </div>
+   <div id="tab-history">
+    <div class="bar">
+     <strong>Inspeções registradas</strong>
+     <button class="secondary" id="refreshHistory">Atualizar</button>
+    </div>
+    <div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div>
+   </div>
+   <div id="tab-users" class="hidden">
+    <h3>Cadastro de usuários</h3>
+    <p class="muted">Por segurança, a criação de contas é feita pelo administrador no painel de autenticação do Supabase. Não colocamos uma chave secreta no navegador.</p>
+    <ol class="muted">
+     <li>No Supabase, abra Authentication → Users.</li>
+     <li>Clique em Add user e informe e-mail e senha.</li>
+     <li>O perfil será criado automaticamente como inspetor.</li>
+     <li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li>
+    </ol>
+   </div>
+  </div>
+ </div>
+</section>
+</main>
+
+<div class="footer">Frota 360 · Águas do Rio</div>
+
 <script>
 const SUPABASE_URL='https://aypdvilwkritqxwfwtjt.supabase.co';
 const SUPABASE_KEY='sb_publishable_zDxR_mdhlR_f_eJuesZyFw_ziI3Uzie';
+const FUNCTION_URL=SUPABASE_URL+'/functions/v1/hyper-endpoint';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const items=['Pneus','Faróis e lanternas','Retrovisores','Para-brisa e vidros','Limpeza e organização','Estepe','Macaco','Chave de roda','Triângulo'];
-let currentUser=null,currentProfile=null,vehicles=[];
+
+const items=[
+ 'Pneus','Faróis e lanternas','Retrovisores',
+ 'Para-brisa e vidros','Limpeza e organização',
+ 'Estepe','Macaco','Chave de roda','Triângulo'
+];
+
+let currentUser=null;
+let currentProfile=null;
 const $=id=>document.getElementById(id);
-function message(id,text,type=''){const el=$(id);el.textContent=text;el.className='status '+type;el.classList.remove('hidden')}
+const isPublicForm=new URLSearchParams(location.search).get('form')==='equipes';
+
+function message(id,text,type=''){
+ const el=$(id);
+ el.textContent=text;
+ el.className='status '+type;
+ el.classList.remove('hidden');
+}
 function hide(id){$(id).classList.add('hidden')}
-function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function renderChecklist(){ $('checklist').innerHTML=items.map((name,i)=>`<div class="item" data-item="${i}"><h3>${name}</h3><div class="choices"><label><input type="radio" name="result${i}" value="Conforme" required> Conforme</label><label><input type="radio" name="result${i}" value="Não conforme" required> Não conforme</label></div><div class="field"><label>Observação (se necessário)</label><textarea id="obs${i}" placeholder="Descreva o problema, se houver"></textarea></div><div class="field"><label>Foto deste item</label><input id="photo${i}" type="file" accept="image/*" capture="environment"></div></div>`).join('')}
-async function loadVehicles(){const {data,error}=await db.from('vehicles').select('id,company,plate').order('plate');if(error){message('appMsg','Não foi possível carregar os veículos: '+error.message,'error');return}vehicles=data||[];$('vehicleSelect').innerHTML='<option value="">Selecione o veículo</option>'+vehicles.map(v=>`<option value="${v.id}">${escapeHtml(v.plate)} — ${escapeHtml(v.company)}</option>`).join('');$('vehicleList').innerHTML=vehicles.length?vehicles.map(v=>`<div class="record">${escapeHtml(v.plate)} — ${escapeHtml(v.company)}</div>`).join(''):'<p class="muted">Nenhum veículo cadastrado.</p>'}
-async function showApp(session){currentUser=session.user;const {data:profile,error}=await db.from('profiles').select('full_name,role').eq('id',currentUser.id).single();if(error||!profile){message('loginMsg','Erro ao localizar perfil: '+(error?.message||'Perfil não encontrado')+' | Código: '+(error?.code||'sem código')+' | Detalhes: '+(error?.details||''),'error');await db.auth.signOut();return}currentProfile=profile;hide('loginView');$('appView').classList.remove('hidden');$('userBadge').classList.remove('hidden');$('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>'+escapeHtml(profile.role);$('welcome').textContent='Olá, '+(profile.full_name||'usuário');$('roleText').textContent=profile.role==='admin'?'Acesso de administrador':'Acesso de inspetor';$('adminArea').classList.toggle('hidden',profile.role!=='admin');$('inspectorArea').classList.toggle('hidden',profile.role==='admin');$('inspectionDate').value=new Date().toISOString().slice(0,10);await loadVehicles();if(profile.role==='admin')await loadHistory()}
-async function loadHistory(){const box=$('historyList');box.textContent='Carregando...';const {data:rows,error}=await db.from('inspections').select('id,vehicle_id,created_by,leader,collaborator_1,collaborator_2,inspection_date,status,vehicles(plate,company),inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false});if(error){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(error.message)+'</div>';return}if(!rows?.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';for(const r of rows){const div=document.createElement('div');div.className='record';const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');div.innerHTML=`<h3>${escapeHtml(r.vehicles?.plate||'Veículo')} · ${escapeHtml(r.inspection_date||'')}</h3><div class="muted">Empresa: ${escapeHtml(r.vehicles?.company||'')} · Líder: ${escapeHtml(r.leader||'')} · Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / '))}</div><p><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></p><div class="details"></div>`;const details=div.querySelector('.details');for(const it of r.inspection_items||[]){const line=document.createElement('p');line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;details.appendChild(line);if(it.photo_path){const {data:file}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);if(file?.signedUrl){const img=document.createElement('img');img.src=file.signedUrl;img.alt='Foto '+it.item_name;details.appendChild(img)}}}box.appendChild(div)}}
-$('loginForm').addEventListener('submit',async e=>{e.preventDefault();hide('loginMsg');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){message('loginMsg','Não foi possível entrar: '+error.message,'error');return}await showApp(data.session)});
-$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-$('inspectionForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitInspection');btn.disabled=true;btn.textContent='Enviando...';try{const payload={vehicle_id:$('vehicleSelect').value,created_by:currentUser.id,leader:$('leader').value.trim(),collaborator_1:$('collab1').value.trim()||null,collaborator_2:$('collab2').value.trim()||null,inspection_date:$('inspectionDate').value,status:'Concluída'};const {data:inspection,error}=await db.from('inspections').insert(payload).select('id').single();if(error)throw error;for(let i=0;i<items.length;i++){const result=document.querySelector(`input[name="result${i}"]:checked`)?.value;if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');let photo_path=null;const file=$('photo'+i).files[0];if(file){const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'');photo_path=`${currentUser.id}/${inspection.id}/${i}-${Date.now()}.${ext}`;const {error:upErr}=await db.storage.from('frota360-fotos').upload(photo_path,file,{upsert:false,contentType:file.type||'image/jpeg'});if(upErr)throw upErr}const {error:itemErr}=await db.from('inspection_items').insert({inspection_id:inspection.id,item_name:items[i],result,observation:$('obs'+i).value.trim()||null,photo_path});if(itemErr)throw itemErr}message('appMsg','Inspeção enviada com sucesso!','success');$('inspectionForm').reset();$('company').value='Águas do Rio';$('inspectionDate').value=new Date().toISOString().slice(0,10);renderChecklist();await loadVehicles()}catch(err){message('appMsg','Não foi possível concluir a inspeção: '+err.message,'error')}finally{btn.disabled=false;btn.textContent='Enviar inspeção'}});
-$('vehicleForm').addEventListener('submit',async e=>{e.preventDefault();const {error}=await db.from('vehicles').insert({company:$('vehicleCompany').value.trim(),plate:$('plate').value.trim().toUpperCase()});if(error){message('appMsg','Erro ao cadastrar veículo: '+error.message,'error');return}$('plate').value='';message('appMsg','Veículo cadastrado.','success');await loadVehicles()});
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['history','vehicles','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='vehicles')loadVehicles();if(b.dataset.tab==='history')loadHistory()}));$('refreshHistory').addEventListener('click',loadHistory);
-renderChecklist();db.auth.getSession().then(({data})=>{if(data.session)showApp(data.session)});
-</script></body></html>
+function escapeHtml(s){
+ return String(s??'').replace(/[&<>"']/g,c=>({
+  '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+ }[c]));
+}
+function localDate(){
+ const d=new Date();
+ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function normalizeTeam(s){
+ return String(s||'').trim().toLocaleLowerCase('pt-BR').replace(/\s+/g,' ');
+}
+function renderChecklist(target, prefix){
+ $(target).innerHTML=items.map((name,i)=>`
+  <div class="item">
+   <h3>${i+1}. ${name}</h3>
+   <div class="choices">
+    <label><input type="radio" name="${prefix}result${i}" value="Conforme" required> Conforme</label>
+    <label><input type="radio" name="${prefix}result${i}" value="Não conforme" required> Não conforme</label>
+   </div>
+   <div class="field">
+    <label>Observação (se necessário)</label>
+    <textarea id="${prefix}obs${i}" placeholder="Descreva o problema, se houver"></textarea>
+   </div>
+   <div class="field">
+    <label>Foto deste item (opcional)</label>
+    <input id="${prefix}photo${i}" type="file" accept="image/*" capture="environment">
+   </div>
+  </div>
+ `).join('');
+}
+
+/* FORMULÁRIO PÚBLICO */
+async function submitPublicForm(e){
+ e.preventDefault();
+ const btn=$('publicSubmit');
+ btn.disabled=true;
+ btn.textContent='Enviando checklist...';
+ hide('publicMsg');
+
+ try{
+  const team=$('pubTeam').value.trim();
+  const vehicle=$('pubVehicle').value.trim();
+  const leader=$('pubLeader').value.trim();
+
+  const checklist=[];
+  const formData=new FormData();
+
+  for(let i=0;i<items.length;i++){
+   const result=document.querySelector(`input[name="pubresult${i}"]:checked`)?.value;
+   if(!result) throw new Error('Selecione Conforme ou Não conforme em todos os itens.');
+
+   const observation=$('pubobs'+i).value.trim();
+   checklist.push({
+    item_name:items[i],
+    result:result,
+    observation:observation||null
+   });
+
+   const file=$('pubphoto'+i).files[0];
+   if(file){
+    if(!file.type.startsWith('image/')) throw new Error('O arquivo do item '+items[i]+' não é uma imagem.');
+    if(file.size>5*1024*1024) throw new Error('A foto do item '+items[i]+' ultrapassa 5 MB.');
+    formData.append('photo_'+i,file);
+   }
+  }
+
+  formData.append('team_name',team);
+  formData.append('vehicle_label',vehicle);
+  formData.append('leader',leader);
+  formData.append('collaborator_1',$('pubCollab1').value.trim());
+  formData.append('collaborator_2',$('pubCollab2').value.trim());
+  formData.append('items',JSON.stringify(checklist));
+
+  const response=await fetch(FUNCTION_URL,{
+   method:'POST',
+   headers:{'apikey':SUPABASE_KEY},
+   body:formData
+  });
+
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok){
+   throw new Error(result.error||result.message||'Erro ao enviar. Código: '+response.status);
+  }
+
+  message('publicMsg','Checklist enviado com sucesso! A equipe já consta como recebida no sistema.','success');
+  $('publicForm').reset();
+  renderChecklist('publicChecklist','pub');
+
+ }catch(err){
+  message('publicMsg','Não foi possível enviar o checklist: '+err.message,'error');
+ }finally{
+  btn.disabled=false;
+  btn.textContent='Enviar checklist';
+ }
+}
+
+/* LOGIN E PERFIS */
+async function showApp(session){
+ currentUser=session.user;
+ const {data:profile,error}=await db.from('profiles')
+  .select('full_name,role').eq('id',currentUser.id).single();
+
+ if(error||!profile){
+  message('loginMsg','Não foi possível localizar seu perfil: '+(error?.message||'Perfil não encontrado'),'error');
+  await db.auth.signOut();
+  return;
+ }
+
+ currentProfile=profile;
+ hide('loginView');
+ $('appView').classList.remove('hidden');
+ $('userBadge').classList.remove('hidden');
+ $('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>'+escapeHtml(profile.role);
+ $('welcome').textContent='Olá, '+(profile.full_name||'usuário');
+ $('roleText').textContent=profile.role==='admin'?'Acesso de administrador':'Acesso de inspetor';
+
+ $('adminArea').classList.toggle('hidden',profile.role!=='admin');
+ $('inspectorArea').classList.toggle('hidden',profile.role!=='inspector');
+
+ if(profile.role==='admin'){
+  await loadHistory();
+ }else if(profile.role==='inspector'){
+  $('expectedDate').value=localDate();
+  await loadInspectorDashboard();
+  await loadInspectorRecords();
+ }else{
+  message('appMsg','Perfil sem permissão de acesso.','error');
+ }
+}
+
+/* CONSULTA DE INSPEÇÕES E FOTOS */
+async function getInspections(){
+ const {data,error}=await db.from('inspections')
+  .select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)')
+  .order('inspection_date',{ascending:false});
+
+ if(error) throw error;
+ return data||[];
+}
+
+async function renderInspectionRecord(r){
+ const div=document.createElement('div');
+ div.className='record';
+ const details=document.createElement('div');
+ const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');
+
+ div.innerHTML=`
+  <h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3>
+  <div class="muted">Data: ${escapeHtml(r.inspection_date||'')} · Líder: ${escapeHtml(r.leader||'')}</div>
+  <div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div>
+  <p><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></p>
+ `;
+ div.appendChild(details);
+
+ for(const it of r.inspection_items||[]){
+  const line=document.createElement('p');
+  line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
+  details.appendChild(line);
+
+  if(it.photo_path){
+   const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);
+   if(!error&&file?.signedUrl){
+    const img=document.createElement('img');
+    img.src=file.signedUrl;
+    img.alt='Foto '+it.item_name;
+    details.appendChild(img);
+   }else{
+    const note=document.createElement('div');
+    note.className='muted';
+    note.textContent='Foto anexada, mas não foi possível abrir neste momento.';
+    details.appendChild(note);
+   }
+  }
+ }
+ return div;
+}
+
+/* HISTÓRICO DO ADMINISTRADOR */
+async function loadHistory(){
+ const box=$('historyList');
+ box.textContent='Carregando registros...';
+
+ try{
+  const rows=await getInspections();
+  if(!rows.length){
+   box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';
+   return;
+  }
+  box.innerHTML='';
+  for(const r of rows){
+   box.appendChild(await renderInspectionRecord(r));
+  }
+ }catch(err){
+  box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>';
+ }
+}
+
+/* PROGRAMAÇÃO DIÁRIA DO INSPETOR */
+$('dailyTeamsForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=$('saveTeamsBtn');
+ btn.disabled=true;
+ btn.textContent='Salvando...';
+
+ try{
+  const date=$('expectedDate').value;
+  const names=$('expectedTeams').value.split('\n').map(x=>x.trim()).filter(Boolean);
+  if(!names.length) throw new Error('Informe pelo menos uma equipe.');
+
+  let saved=0;
+  for(const name of names){
+   const {error}=await db.from('daily_teams').upsert({
+    team_name:name,
+    expected_date:date,
+    created_by:currentUser.id
+   },{onConflict:'team_name,expected_date',ignoreDuplicates:true});
+
+   if(error) throw error;
+   saved++;
+  }
+
+  message('appMsg','Programação salva. Equipes informadas: '+saved+'.','success');
+  $('expectedTeams').value='';
+  await loadInspectorDashboard();
+
+ }catch(err){
+  message('appMsg','Erro ao salvar equipes: '+err.message,'error');
+ }finally{
+  btn.disabled=false;
+  btn.textContent='Salvar equipes previstas';
+ }
+});
+
+async function loadInspectorDashboard(){
+ const date=$('expectedDate').value||localDate();
+ $('teamStatusList').textContent='Carregando equipes...';
+
+ try{
+  const [{data:teams,error:teamError},records]=await Promise.all([
+   db.from('daily_teams').select('id,team_name,expected_date')
+    .eq('expected_date',date).order('team_name'),
+   getInspections()
+  ]);
+
+  if(teamError) throw teamError;
+
+  const dayRecords=records.filter(r=>String(r.inspection_date||'').slice(0,10)===date);
+  const expected=teams||[];
+  const completedNames=new Set(dayRecords.map(r=>normalizeTeam(r.team_name)));
+
+  const completed=expected.filter(t=>completedNames.has(normalizeTeam(t.team_name))).length;
+  const pending=expected.length-completed;
+
+  $('countExpected').textContent=expected.length;
+  $('countCompleted').textContent=completed;
+  $('countPending').textContent=pending;
+
+  if(!expected.length){
+   $('teamStatusList').innerHTML='<p class="muted">Nenhuma equipe cadastrada para esta data. Informe as equipes previstas acima.</p>';
+   return;
+  }
+
+  $('teamStatusList').innerHTML='';
+  for(const team of expected){
+   const done=completedNames.has(normalizeTeam(team.team_name));
+   const card=document.createElement('div');
+   card.className='record';
+   card.innerHTML=`
+    <div class="bar">
+     <strong>${escapeHtml(team.team_name)}</strong>
+     <span class="pill ${done?'good':'pending'}">${done?'Concluída':'Pendente'}</span>
+    </div>
+   `;
+   const remove=document.createElement('button');
+   remove.className='danger small-btn';
+   remove.textContent='Remover da programação';
+   remove.addEventListener('click',async()=>{
+    if(!confirm('Remover '+team.team_name+' da programação deste dia?')) return;
+    const {error}=await db.from('daily_teams').delete().eq('id',team.id);
+    if(error){message('appMsg','Erro ao remover equipe: '+error.message,'error');return;}
+    await loadInspectorDashboard();
+   });
+   card.appendChild(remove);
+   $('teamStatusList').appendChild(card);
+  }
+
+  const unplanned=dayRecords.filter(r=>!expected.some(t=>normalizeTeam(t.team_name)===normalizeTeam(r.team_name)));
+  if(unplanned.length){
+   const title=document.createElement('h3');
+   title.textContent='Checklists recebidos sem previsão';
+   $('teamStatusList').appendChild(title);
+   for(const r of unplanned){
+    const line=document.createElement('div');
+    line.className='record';
+    line.innerHTML='<strong>'+escapeHtml(r.team_name||'Equipe não informada')+'</strong> — '+escapeHtml(r.vehicle_label||'Veículo não informado');
+    $('teamStatusList').appendChild(line);
+   }
+  }
+
+ }catch(err){
+  $('teamStatusList').innerHTML='<div class="status error">Erro ao carregar painel: '+escapeHtml(err.message)+'</div>';
+ }
+}
+
+async function loadInspectorRecords(){
+ const box=$('inspectorRecords');
+ box.textContent='Carregando registros...';
+ try{
+  const rows=await getInspections();
+  if(!rows.length){
+   box.innerHTML='<p class="muted">Ainda não há checklists recebidos.</p>';
+   return;
+  }
+  box.innerHTML='';
+  for(const r of rows){
+   box.appendChild(await renderInspectionRecord(r));
+  }
+ }catch(err){
+  box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>';
+ }
+}
+
+/* EVENTOS */
+$('loginForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ hide('loginMsg');
+ const {data,error}=await db.auth.signInWithPassword({
+  email:$('email').value.trim(),
+  password:$('password').value
+ });
+ if(error){
+  message('loginMsg','Não foi possível entrar: '+error.message,'error');
+  return;
+ }
+ await showApp(data.session);
+});
+
+$('logoutBtn').addEventListener('click',async()=>{
+ await db.auth.signOut();
+ location.reload();
+});
+
+$('publicForm').addEventListener('submit',submitPublicForm);
+$('refreshHistory').addEventListener('click',loadHistory);
+$('refreshInspector').addEventListener('click',loadInspectorDashboard);
+$('refreshInspectorRecords').addEventListener('click',loadInspectorRecords);
+$('expectedDate').addEventListener('change',loadInspectorDashboard);
+
+document.querySelectorAll('[data-tab]').forEach(b=>{
+ b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));
+  ['history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  if(b.dataset.tab==='history') loadHistory();
+ });
+});
+
+/* INICIALIZAÇÃO */
+if(isPublicForm){
+ hide('loginView');
+ $('publicView').classList.remove('hidden');
+ renderChecklist('publicChecklist','pub');
+}else{
+ db.auth.getSession().then(({data})=>{
+  if(data.session) showApp(data.session);
+ });
+}
+</script>
+</body>
+</html>
