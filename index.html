@@ -54,6 +54,18 @@ button.danger{background:#b42318}
 .counter{font-size:25px;font-weight:800;color:var(--navy)}
 .footer{text-align:center;color:#78909e;font-size:12px;padding:25px}
 .small-btn{padding:7px 10px;font-size:12px}
+.history-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 4px;border-bottom:1px solid var(--line)}
+.history-row:last-child{border-bottom:0}
+.plate-link{background:transparent;color:var(--navy);padding:4px 0;font-size:17px;font-weight:800;text-align:left}
+.plate-link:hover{text-decoration:underline;color:var(--blue)}
+.history-meta{font-size:13px;color:var(--muted);margin-top:4px}
+.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.detail-item{padding:15px 0;border-bottom:1px solid var(--line)}
+.detail-item:last-child{border-bottom:0}
+.photo-full{display:block;max-width:100%;width:auto;height:auto;max-height:240px;object-fit:contain;background:#f2f6f8;border:1px solid var(--line);border-radius:10px;margin-top:10px;cursor:zoom-in}
+.photo-viewer{position:fixed;inset:0;background:rgba(4,20,31,.94);z-index:9999;display:flex;align-items:center;justify-content:center;padding:55px 18px 20px}
+.photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}
+.photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}}
 </style>
 </head>
@@ -209,6 +221,7 @@ button.danger{background:#b42318}
      <button class="secondary" id="refreshHistory">Atualizar</button>
     </div>
     <div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div>
+     <div id="historyDetail" class="hidden" style="margin-top:16px"></div>
    </div>
    <div id="tab-users" class="hidden">
     <h3>Cadastro de usuários</h3>
@@ -226,6 +239,11 @@ button.danger{background:#b42318}
 </main>
 
 <div class="footer">Frota 360 · Águas do Rio</div>
+
+<div id="photoViewer" class="photo-viewer hidden" role="dialog" aria-modal="true" aria-label="Visualização da foto">
+ <button type="button" id="closePhotoViewer">Fechar ✕</button>
+ <img id="photoViewerImage" src="" alt="Foto ampliada">
+</div>
 
 <script>
 const SUPABASE_URL='https://aypdvilwkritqxwfwtjt.supabase.co';
@@ -387,62 +405,127 @@ async function getInspections(){
  const {data,error}=await db.from('inspections')
   .select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)')
   .order('inspection_date',{ascending:false});
-
  if(error) throw error;
  return data||[];
+}
+
+function formatInspectionDate(value){
+ if(!value) return 'Data não informada';
+ const date=new Date(value);
+ return Number.isNaN(date.getTime()) ? String(value) :
+  date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+}
+
+function openPhotoViewer(url, title){
+ $('photoViewerImage').src=url;
+ $('photoViewerImage').alt=title||'Foto ampliada';
+ $('photoViewer').classList.remove('hidden');
+}
+function closePhotoViewer(){
+ $('photoViewer').classList.add('hidden');
+ $('photoViewerImage').src='';
 }
 
 async function renderInspectionRecord(r){
  const div=document.createElement('div');
  div.className='record';
- const details=document.createElement('div');
  const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');
-
  div.innerHTML=`
-  <h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3>
-  <div class="muted">Data: ${escapeHtml(r.inspection_date||'')} · Líder: ${escapeHtml(r.leader||'')}</div>
-  <div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div>
-  <p><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></p>
- `;
- div.appendChild(details);
-
+  <div class="bar">
+   <div>
+    <h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3>
+    <div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div>
+    <div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div>
+   </div>
+   <span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span>
+  </div>`;
  for(const it of r.inspection_items||[]){
-  const line=document.createElement('p');
+  const line=document.createElement('div');
+  line.className='detail-item';
   line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
-  details.appendChild(line);
-
   if(it.photo_path){
    const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);
    if(!error&&file?.signedUrl){
     const img=document.createElement('img');
+    img.className='photo-full';
     img.src=file.signedUrl;
     img.alt='Foto '+it.item_name;
-    details.appendChild(img);
+    img.title='Clique para ampliar a foto';
+    img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto '+it.item_name));
+    line.appendChild(img);
    }else{
     const note=document.createElement('div');
     note.className='muted';
     note.textContent='Foto anexada, mas não foi possível abrir neste momento.';
-    details.appendChild(note);
+    line.appendChild(note);
    }
   }
+  div.appendChild(line);
  }
  return div;
 }
 
-/* HISTÓRICO DO ADMINISTRADOR */
+/* HISTÓRICO MINIMALISTA DO ADMINISTRADOR */
+async function showHistoryDetails(inspectionId){
+ const row=(window.frotaHistoryRows||[]).find(r=>r.id===inspectionId);
+ if(!row) return;
+ const detail=$('historyDetail');
+ detail.classList.remove('hidden');
+ detail.innerHTML=`
+  <div class="detail-head">
+   <div>
+    <h2>${escapeHtml(row.vehicle_label||'Veículo não informado')}</h2>
+    <div class="muted">${escapeHtml(row.team_name||'Equipe não informada')} · ${escapeHtml(formatInspectionDate(row.inspection_date))}</div>
+   </div>
+   <button class="secondary" id="backHistory">Voltar à lista</button>
+  </div>
+  <div id="historyDetailContent"></div>`;
+ $('historyList').classList.add('hidden');
+ $('backHistory').addEventListener('click',()=>{
+  detail.classList.add('hidden');
+  $('historyList').classList.remove('hidden');
+  detail.innerHTML='';
+ });
+ const content=await renderInspectionRecord(row);
+ $('historyDetailContent').appendChild(content);
+}
+
 async function loadHistory(){
  const box=$('historyList');
+ const detail=$('historyDetail');
+ box.classList.remove('hidden');
+ detail.classList.add('hidden');
+ detail.innerHTML='';
  box.textContent='Carregando registros...';
-
  try{
   const rows=await getInspections();
+  window.frotaHistoryRows=rows;
   if(!rows.length){
    box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';
    return;
   }
   box.innerHTML='';
   for(const r of rows){
-   box.appendChild(await renderInspectionRecord(r));
+   const line=document.createElement('div');
+   line.className='history-row';
+   const info=document.createElement('div');
+   const plate=document.createElement('button');
+   plate.type='button';
+   plate.className='plate-link';
+   plate.textContent=r.vehicle_label||'Veículo não informado';
+   plate.addEventListener('click',()=>showHistoryDetails(r.id));
+   const meta=document.createElement('div');
+   meta.className='history-meta';
+   meta.textContent=(r.team_name||'Equipe não informada')+' · '+formatInspectionDate(r.inspection_date);
+   const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length;
+   info.appendChild(plate);
+   info.appendChild(meta);
+   const status=document.createElement('span');
+   status.className='pill '+(bad?'bad':'good');
+   status.textContent=bad?bad+' não conformidade(s)':'Concluída';
+   line.appendChild(info);
+   line.appendChild(status);
+   box.appendChild(line);
   }
  }catch(err){
   box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>';
@@ -598,6 +681,9 @@ $('publicForm').addEventListener('submit',submitPublicForm);
 $('refreshHistory').addEventListener('click',loadHistory);
 $('refreshInspector').addEventListener('click',loadInspectorDashboard);
 $('refreshInspectorRecords').addEventListener('click',loadInspectorRecords);
+$('closePhotoViewer').addEventListener('click',closePhotoViewer);
+$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer') closePhotoViewer();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape') closePhotoViewer();});
 $('expectedDate').addEventListener('change',loadInspectorDashboard);
 
 document.querySelectorAll('[data-tab]').forEach(b=>{
