@@ -66,6 +66,7 @@ button.danger{background:#b42318}
 .photo-viewer{position:fixed;inset:0;background:rgba(4,20,31,.94);z-index:9999;display:flex;align-items:center;justify-content:center;padding:55px 18px 20px}
 .photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}
 .photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
+.search-field{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px}
 @media(max-width:650px){.grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}}
 </style>
 </head>
@@ -156,86 +157,166 @@ button.danger{background:#b42318}
   <div id="appMsg" class="status hidden"></div>
  </div>
 
- <!-- PAINEL DO INSPETOR -->
- <div id="inspectorArea" class="hidden">
-  <div class="panel">
-   <h2>Monitoramento das equipes</h2>
-   <p class="muted">Cadastre as equipes previstas para o dia e acompanhe os checklists recebidos.</p>
-   <form id="dailyTeamsForm">
-    <div class="grid">
-     <div class="field">
-      <label>Data da programação</label>
-      <input type="date" id="expectedDate" required>
-     </div>
-     <div class="field">
-      <label>Equipes previstas (uma por linha)</label>
-      <textarea id="expectedTeams" placeholder="RIOSETCS-001&#10;RIOSETCS-002&#10;RIOCOMCS-001" required></textarea>
-     </div>
-    </div>
-    <button type="submit" id="saveTeamsBtn">Salvar equipes previstas</button>
-   </form>
-  </div>
-
-  <div class="panel">
-   <div class="bar">
-    <h2>Acompanhamento diário</h2>
-    <button class="secondary" id="refreshInspector">Atualizar painel</button>
-   </div>
+<!-- PAINEL DO INSPETOR -->
+<div id="inspectorArea" class="hidden">
+ <div class="panel">
+  <h2>Monitoramento das equipes</h2>
+  <p class="muted">Cadastre as equipes previstas para o dia e acompanhe os checklists recebidos.</p>
+  <form id="dailyTeamsForm">
    <div class="grid">
-    <div class="record">
-     <div class="muted">Equipes previstas</div>
-     <div class="counter" id="countExpected">0</div>
+    <div class="field">
+     <label>Data da programação</label>
+     <input type="date" id="expectedDate" required>
     </div>
-    <div class="record">
-     <div class="muted">Checklists recebidos</div>
-     <div class="counter" id="countCompleted">0</div>
+    <div class="field">
+     <label>Equipes previstas (uma por linha)</label>
+     <textarea id="expectedTeams" placeholder="RIOSETCS-001&#10;RIOSETCS-002&#10;RIOCOMCS-001" required></textarea>
     </div>
+   </div>
+   <button type="submit" id="saveTeamsBtn">Salvar equipes previstas</button>
+  </form>
+ </div>
+
+ <div class="panel">
+  <div class="bar">
+   <h2>Acompanhamento diário</h2>
+   <button class="secondary" id="refreshInspector">Atualizar painel</button>
+  </div>
+  <div class="grid">
+   <div class="record">
+    <div class="muted">Equipes previstas</div>
+    <div class="counter" id="countExpected">0</div>
    </div>
    <div class="record">
-    <div class="muted">Pendentes</div>
-    <div class="counter" id="countPending">0</div>
+    <div class="muted">Checklists recebidos</div>
+    <div class="counter" id="countCompleted">0</div>
    </div>
-   <div id="teamStatusList" class="muted">Selecione a data e atualize o painel.</div>
+  </div>
+  <div class="record">
+   <div class="muted">Pendentes</div>
+   <div class="counter" id="countPending">0</div>
+  </div>
+  <div id="teamStatusList" class="muted">Selecione a data e atualize o painel.</div>
+ </div>
+
+ <div class="panel">
+  <div class="bar">
+   <h2>Checklists recebidos</h2>
+   <button class="secondary" id="refreshInspectorRecords">Atualizar</button>
+  </div>
+  <div id="inspectorRecords" class="muted">Carregando registros...</div>
+ </div>
+</div>
+
+<!-- PAINEL DO ADMINISTRADOR -->
+<div id="adminArea" class="hidden">
+ <div class="panel">
+  <h2>Painel administrativo</h2>
+  <div class="muted">Histórico de inspeções, controle de oficina, veículos parados e usuários.</div>
+
+  <div class="tabs">
+   <button class="active" data-tab="history">Histórico</button>
+   <button data-tab="workshop">Controle de oficina</button>
+   <button data-tab="base">Parados na base</button>
+   <button data-tab="users">Usuários</button>
   </div>
 
-  <div class="panel">
+  <div id="tab-history">
    <div class="bar">
-    <h2>Checklists recebidos</h2>
-    <button class="secondary" id="refreshInspectorRecords">Atualizar</button>
+    <strong>Inspeções registradas</strong>
+    <button class="secondary" id="refreshHistory">Atualizar</button>
    </div>
-   <div id="inspectorRecords" class="muted">Carregando registros...</div>
+   <div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div>
+   <div id="historyDetail" class="hidden" style="margin-top:16px"></div>
   </div>
- </div>
 
- <!-- PAINEL DO ADMINISTRADOR -->
- <div id="adminArea" class="hidden">
-  <div class="panel">
-   <h2>Painel administrativo</h2>
-   <div class="muted">Histórico completo de inspeções e gestão de usuários.</div>
-   <div class="tabs">
-    <button class="active" data-tab="history">Histórico</button>
-    <button data-tab="users">Usuários</button>
-   </div>
-   <div id="tab-history">
-    <div class="bar">
-     <strong>Inspeções registradas</strong>
-     <button class="secondary" id="refreshHistory">Atualizar</button>
+  <!-- CONTROLE DE OFICINA -->
+  <div id="tab-workshop" class="hidden">
+   <h3>Controle de oficina</h3>
+   <p class="muted">Registre a entrada do veículo na oficina e informe a data de liberação quando ele retornar.</p>
+
+   <form id="workshopForm">
+    <div class="grid">
+     <div class="field">
+      <label>Placa do veículo *</label>
+      <input id="workPlate" required>
+     </div>
+     <div class="field">
+      <label>Líder responsável *</label>
+      <input id="workLeader" required>
+     </div>
+     <div class="field">
+      <label>Data de entrada *</label>
+      <input id="workEntry" type="date" required>
+     </div>
+     <div class="field">
+      <label>Oficina *</label>
+      <input id="workShop" required>
+     </div>
     </div>
-    <div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div>
-    <div id="historyDetail" class="hidden" style="margin-top:16px"></div>
-   </div>
-   <div id="tab-users" class="hidden">
-    <h3>Cadastro de usuários</h3>
-    <p class="muted">Por segurança, a criação de contas é feita pelo administrador no painel de autenticação do Supabase. Não colocamos uma chave secreta no navegador.</p>
-    <ol class="muted">
-     <li>No Supabase, abra Authentication → Users.</li>
-     <li>Clique em Add user e informe e-mail e senha.</li>
-     <li>O perfil será criado automaticamente como inspetor.</li>
-     <li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li>
-    </ol>
-   </div>
+    <div class="field">
+     <label>Motivo da entrada *</label>
+     <textarea id="workReason" required></textarea>
+    </div>
+    <button type="submit" id="saveWorkshop">Registrar entrada</button>
+   </form>
+
+   <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+   <h3>Histórico da oficina</h3>
+   <input id="workSearch" class="search-field" placeholder="Pesquisar pela placa...">
+   <div id="workshopList" class="muted" style="margin-top:12px">Carregando...</div>
+  </div>
+
+  <!-- VEÍCULOS PARADOS NA BASE -->
+  <div id="tab-base" class="hidden">
+   <h3>Veículos parados na base</h3>
+   <p class="muted">Registre os veículos que permaneceram parados na base e o motivo.</p>
+
+   <form id="baseForm">
+    <div class="grid">
+     <div class="field">
+      <label>Data *</label>
+      <input id="baseDate" type="date" required>
+     </div>
+     <div class="field">
+      <label>Placa do veículo *</label>
+      <input id="basePlate" required>
+     </div>
+     <div class="field">
+      <label>Líder responsável *</label>
+      <input id="baseLeader" required>
+     </div>
+     <div class="field">
+      <label>Supervisor *</label>
+      <input id="baseSupervisor" required>
+     </div>
+    </div>
+    <div class="field">
+     <label>Motivo de estar parado *</label>
+     <textarea id="baseReason" required></textarea>
+    </div>
+    <button type="submit" id="saveBase">Registrar veículo parado</button>
+   </form>
+
+   <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+   <h3>Histórico de veículos parados</h3>
+   <input id="baseSearch" class="search-field" placeholder="Pesquisar pela placa...">
+   <div id="baseList" class="muted" style="margin-top:12px">Carregando...</div>
+  </div>
+
+  <!-- USUÁRIOS -->
+  <div id="tab-users" class="hidden">
+   <h3>Cadastro de usuários</h3>
+   <p class="muted">Por segurança, a criação de contas é feita pelo administrador no painel de autenticação do Supabase. Não colocamos uma chave secreta no navegador.</p>
+   <ol class="muted">
+    <li>No Supabase, abra Authentication → Users.</li>
+    <li>Clique em Add user e informe e-mail e senha.</li>
+    <li>O perfil será criado automaticamente como inspetor.</li>
+    <li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li>
+   </ol>
   </div>
  </div>
+</div>
 </section>
 </main>
 
@@ -283,7 +364,8 @@ function normalizeTeam(s){
  return String(s||'').trim().toLocaleLowerCase('pt-BR').replace(/\s+/g,' ');
 }
 
-function renderChecklist(target, prefix){
+/* CHECKLIST PÚBLICO */
+function renderChecklist(target,prefix){
  $(target).innerHTML=items.map((name,i)=>`
   <div class="item">
    <h3>${i+1}. ${name}</h3>
@@ -427,7 +509,7 @@ function formatInspectionDate(value){
   date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
 }
 
-function openPhotoViewer(url, title){
+function openPhotoViewer(url,title){
  $('photoViewerImage').src=url;
  $('photoViewerImage').alt=title||'Foto ampliada';
  $('photoViewer').classList.remove('hidden');
@@ -542,6 +624,183 @@ async function loadHistory(){
   box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>';
  }
 }
+
+/* CONTROLE DE OFICINA */
+async function loadWorkshop(){
+ const box=$('workshopList');
+ box.textContent='Carregando registros...';
+
+ try{
+  const {data,error}=await db.from('workshop_records')
+   .select('*').order('entry_date',{ascending:false});
+
+  if(error) throw error;
+
+  const search=($('workSearch').value||'').trim().toLowerCase();
+  const rows=(data||[]).filter(r=>(r.plate||'').toLowerCase().includes(search));
+
+  if(!rows.length){
+   box.innerHTML='<p class="muted">Nenhum registro encontrado.</p>';
+   return;
+  }
+
+  box.innerHTML='';
+
+  for(const r of rows){
+   const released=!!r.release_date;
+   const card=document.createElement('div');
+   card.className='record';
+
+   card.innerHTML=`
+    <div class="bar">
+     <h3>${escapeHtml(r.plate)}</h3>
+     <span class="pill ${released?'good':'pending'}">${released?'Liberado':'Na oficina'}</span>
+    </div>
+    <p class="muted">Líder: ${escapeHtml(r.leader_name)}</p>
+    <p class="muted">Oficina: ${escapeHtml(r.workshop_name)}</p>
+    <p class="muted">Entrada: ${escapeHtml(r.entry_date)}</p>
+    <p>Motivo: ${escapeHtml(r.reason)}</p>
+    ${released?`<p class="muted">Liberação: ${escapeHtml(r.release_date)}</p>`:`
+     <div class="field">
+      <label>Data de liberação</label>
+      <input type="date" id="release-${r.id}">
+     </div>
+     <button type="button" class="small-btn" data-release="${r.id}">Registrar liberação</button>
+    `}
+   `;
+
+   box.appendChild(card);
+  }
+
+  box.querySelectorAll('[data-release]').forEach(btn=>{
+   btn.addEventListener('click',async()=>{
+    const id=btn.dataset.release;
+    const date=$('release-'+id).value;
+
+    if(!date){
+     message('appMsg','Informe a data de liberação.','error');
+     return;
+    }
+
+    const {error}=await db.from('workshop_records')
+     .update({release_date:date}).eq('id',id);
+
+    if(error){
+     message('appMsg','Erro ao registrar liberação: '+error.message,'error');
+     return;
+    }
+
+    message('appMsg','Liberação registrada com sucesso.','success');
+    await loadWorkshop();
+   });
+  });
+
+ }catch(err){
+  box.innerHTML='<div class="status error">Erro ao carregar oficina: '+escapeHtml(err.message)+'</div>';
+ }
+}
+
+$('workshopForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=$('saveWorkshop');
+ btn.disabled=true;
+
+ try{
+  const {error}=await db.from('workshop_records').insert({
+   plate:$('workPlate').value.trim().toUpperCase(),
+   leader_name:$('workLeader').value.trim(),
+   entry_date:$('workEntry').value,
+   workshop_name:$('workShop').value.trim(),
+   reason:$('workReason').value.trim(),
+   created_by:currentUser.id
+  });
+
+  if(error) throw error;
+
+  $('workshopForm').reset();
+  message('appMsg','Entrada na oficina registrada com sucesso.','success');
+  await loadWorkshop();
+
+ }catch(err){
+  message('appMsg','Erro ao registrar oficina: '+err.message,'error');
+ }finally{
+  btn.disabled=false;
+ }
+});
+
+/* VEÍCULOS PARADOS NA BASE */
+async function loadBaseRecords(){
+ const box=$('baseList');
+ box.textContent='Carregando registros...';
+
+ try{
+  const {data,error}=await db.from('base_stopped_vehicles')
+   .select('*').order('record_date',{ascending:false});
+
+  if(error) throw error;
+
+  const search=($('baseSearch').value||'').trim().toLowerCase();
+  const rows=(data||[]).filter(r=>(r.plate||'').toLowerCase().includes(search));
+
+  if(!rows.length){
+   box.innerHTML='<p class="muted">Nenhum registro encontrado.</p>';
+   return;
+  }
+
+  box.innerHTML='';
+
+  rows.forEach(r=>{
+   const card=document.createElement('div');
+   card.className='record';
+   card.innerHTML=`
+    <div class="bar">
+     <h3>${escapeHtml(r.plate)}</h3>
+     <span class="pill pending">Parado na base</span>
+    </div>
+    <p class="muted">Data: ${escapeHtml(r.record_date)}</p>
+    <p class="muted">Líder: ${escapeHtml(r.leader_name)}</p>
+    <p class="muted">Supervisor: ${escapeHtml(r.supervisor_name)}</p>
+    <p>Motivo: ${escapeHtml(r.reason)}</p>
+   `;
+   box.appendChild(card);
+  });
+
+ }catch(err){
+  box.innerHTML='<div class="status error">Erro ao carregar registros: '+escapeHtml(err.message)+'</div>';
+ }
+}
+
+$('baseForm').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=$('saveBase');
+ btn.disabled=true;
+
+ try{
+  const {error}=await db.from('base_stopped_vehicles').insert({
+   record_date:$('baseDate').value,
+   plate:$('basePlate').value.trim().toUpperCase(),
+   reason:$('baseReason').value.trim(),
+   leader_name:$('baseLeader').value.trim(),
+   supervisor_name:$('baseSupervisor').value.trim(),
+   created_by:currentUser.id
+  });
+
+  if(error) throw error;
+
+  $('baseForm').reset();
+  $('baseDate').value=localDate();
+  message('appMsg','Veículo parado na base registrado com sucesso.','success');
+  await loadBaseRecords();
+
+ }catch(err){
+  message('appMsg','Erro ao registrar veículo: '+err.message,'error');
+ }finally{
+  btn.disabled=false;
+ }
+});
+
+$('workSearch').addEventListener('input',loadWorkshop);
+$('baseSearch').addEventListener('input',loadBaseRecords);
 
 /* PROGRAMAÇÃO DIÁRIA DO INSPETOR */
 $('dailyTeamsForm').addEventListener('submit',async e=>{
@@ -693,15 +952,29 @@ $('refreshHistory').addEventListener('click',loadHistory);
 $('refreshInspector').addEventListener('click',loadInspectorDashboard);
 $('refreshInspectorRecords').addEventListener('click',loadInspectorRecords);
 $('closePhotoViewer').addEventListener('click',closePhotoViewer);
-$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer') closePhotoViewer();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape') closePhotoViewer();});
+$('photoViewer').addEventListener('click',e=>{
+ if(e.target.id==='photoViewer') closePhotoViewer();
+});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape') closePhotoViewer();
+});
 $('expectedDate').addEventListener('change',loadInspectorDashboard);
 
 document.querySelectorAll('[data-tab]').forEach(b=>{
  b.addEventListener('click',()=>{
-  document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));
-  ['history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
+  const tabs=['history','workshop','base','users'];
+
+  document.querySelectorAll('[data-tab]').forEach(x=>{
+   x.classList.toggle('active',x===b);
+  });
+
+  tabs.forEach(t=>{
+   $('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab);
+  });
+
   if(b.dataset.tab==='history') loadHistory();
+  if(b.dataset.tab==='workshop') loadWorkshop();
+  if(b.dataset.tab==='base') loadBaseRecords();
  });
 });
 
