@@ -7,119 +7,64 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b;--orange:#a15c00}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}
-button:disabled{opacity:.55;cursor:wait}
-button.secondary{background:#e8f1f5;color:var(--navy)}
-button.danger{background:#b42318}
-.hidden{display:none!important}
-.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}
-.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}
-.brand h1{font-size:22px;margin:5px 0 0}
-.brand .product{font-size:13px;color:#d5edf2}
-.wrap{max-width:1100px;margin:24px auto;padding:0 16px}
-.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}
-.login{max-width:430px;margin:50px auto}
-.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}
-.muted{color:var(--muted);font-size:14px}
-.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}
-.field label{font-size:13px;font-weight:700;color:#385365}
-.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}
-.field textarea{min-height:75px;resize:vertical}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
-.tabs button{background:#e8f1f5;color:var(--navy)}
-.tabs button.active{background:var(--blue);color:white}
-.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
-.item h3{margin:0 0 10px;font-size:16px}
-.choices{display:flex;gap:10px;flex-wrap:wrap}
-.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}
-.choices input{margin-right:5px}
-.item input[type=file]{max-width:100%;font-size:13px}
-.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}
-.error{background:#fff0ef;color:var(--red)}
-.success{background:#eaf7f0;color:var(--green)}
-.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}
-.record h3{margin:0 0 5px}
-.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}
-.pill.bad{background:#ffeded;color:#a51d16}
-.pill.good{background:#e8f7ef;color:#16794b}
-.pill.pending{background:#fff4df;color:#925400}
-.counter{font-size:27px;font-weight:800;color:var(--navy)}
-.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}
-.history-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 4px;border-bottom:1px solid var(--line)}
-.history-row:last-child{border-bottom:0}
-.plate-link{background:transparent;color:var(--navy);padding:4px 0;font-size:17px;font-weight:800;text-align:left}
-.plate-link:hover{text-decoration:underline;color:var(--blue)}
-.history-meta{font-size:13px;color:var(--muted);margin-top:4px}
-.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.detail-item{padding:15px 0;border-bottom:1px solid var(--line)}
-.detail-item:last-child{border-bottom:0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#b42318}.hidden{display:none!important}
+.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}.brand h1{font-size:22px;margin:5px 0 0}.brand .product{font-size:13px;color:#d5edf2}
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}
+.login{max-width:430px;margin:50px auto}.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}.muted{color:var(--muted);font-size:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#385365}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}.field textarea{min-height:75px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button{background:#e8f1f5;color:var(--navy)}.tabs button.active{background:var(--blue);color:white}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.item h3{margin:0 0 10px;font-size:16px}
+.choices{display:flex;gap:10px;flex-wrap:wrap}.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}.choices input{margin-right:5px}
+.item input[type=file]{max-width:100%;font-size:13px}.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}
+.error{background:#fff0ef;color:var(--red)}.success{background:#eaf7f0;color:var(--green)}
+.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.record h3{margin:0 0 5px}
+.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}.pill.bad{background:#ffeded;color:#a51d16}.pill.good{background:#e8f7ef;color:#16794b}.pill.pending{background:#fff4df;color:#925400}
+.counter{font-size:27px;font-weight:800;color:var(--navy)}.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}
+.history-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 4px;border-bottom:1px solid var(--line)}.history-row:last-child{border-bottom:0}
+.plate-link{background:transparent;color:var(--navy);padding:4px 0;font-size:17px;font-weight:800;text-align:left}.plate-link:hover{text-decoration:underline;color:var(--blue)}
+.history-meta{font-size:13px;color:var(--muted);margin-top:4px}.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.detail-item{padding:15px 0;border-bottom:1px solid var(--line)}.detail-item:last-child{border-bottom:0}
 .photo-full{display:block;max-width:100%;width:auto;height:auto;max-height:240px;object-fit:contain;background:#f2f6f8;border:1px solid var(--line);border-radius:10px;margin-top:10px;cursor:zoom-in}
 .photo-viewer{position:fixed;inset:0;background:rgba(4,20,31,.94);z-index:9999;display:flex;align-items:center;justify-content:center;padding:55px 18px 20px}
-.photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}
-.photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
-.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.metric{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fbfdfe}
-.metric .counter{font-size:32px}
-.metric.apto{border-left:5px solid var(--green)}
-.metric.oficina{border-left:5px solid var(--orange)}
+.photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}.photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
+.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fbfdfe}
+.metric .counter{font-size:32px}.metric.apto{border-left:5px solid var(--green)}.metric.oficina{border-left:5px solid var(--orange)}
 .chart-row{display:grid;grid-template-columns:100px 1fr 42px;align-items:center;gap:10px;margin:13px 0;font-size:13px}
-.chart-track{height:15px;background:#edf2f5;border-radius:20px;overflow:hidden}
-.chart-fill{height:100%;border-radius:20px;min-width:0}
-.chart-fill.apto{background:#22a06b}
-.chart-fill.oficina{background:#e39a2d}
-.fleet-search{width:100%;padding:13px;border:1px solid var(--line);border-radius:10px;margin:14px 0}
-.fleet-group{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:#fff;overflow:hidden}
-.fleet-group summary{cursor:pointer;padding:15px;font-weight:800;color:var(--navy);background:#f6fafb;list-style:none}
-.fleet-group summary::-webkit-details-marker{display:none}
-.fleet-group summary:after{content:"＋";float:right;color:var(--blue)}
-.fleet-group[open] summary:after{content:"−"}
-.fleet-group-content{padding:0 14px 12px}
-.vehicle-entry{border-bottom:1px solid var(--line);padding:12px 0}
-.vehicle-entry:last-child{border-bottom:0}
-.vehicle-entry summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.vehicle-entry summary::-webkit-details-marker{display:none}
-.vehicle-entry summary strong{font-size:16px;color:var(--navy)}
-.vehicle-edit{padding:10px 0 0}
-.small-btn{padding:8px 11px;font-size:12px}
-.add-vehicle-box{margin:14px 0;border:1px solid var(--line);border-radius:12px;padding:14px}
-.add-vehicle-box summary{cursor:pointer;color:var(--blue);font-weight:800}
-@media(max-width:650px){
-.grid,.metric-grid{grid-template-columns:1fr}
-.top{padding:18px 14px}
-.panel{padding:16px}
-.login{margin:25px auto}
-.brand h1{font-size:19px}
-.vehicle-actions{grid-template-columns:1fr}
-}
+.chart-track{height:15px;background:#edf2f5;border-radius:20px;overflow:hidden}.chart-fill{height:100%;border-radius:20px;min-width:0}.chart-fill.apto{background:#22a06b}.chart-fill.oficina{background:#e39a2d}
+.vehicle-card{border:1px solid var(--line);border-radius:12px;padding:15px;margin:12px 0}.vehicle-card h3{margin:0;color:var(--navy)}
+.vehicle-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+/* Interface administrativa mais limpa */
+#tab-fleet .metric-grid,#tab-fleet .record:has(.chart-row){display:none}
+#tab-fleet .record{box-shadow:none;border-color:transparent;padding:8px 0}
+#tab-fleet .vehicle-card{background:#fff;box-shadow:none}
+#tab-fleet .vehicle-card .field{margin:8px 0}
+#tab-fleet .vehicle-card{padding:12px 4px;border-width:0 0 1px;border-radius:0}
+#tab-fleet> .bar{margin-top:18px}
+.registration-box{margin:12px 0;border:1px solid var(--line);border-radius:12px;background:#fbfdfe}
+.registration-box summary{cursor:pointer;padding:13px 15px;color:var(--navy);font-weight:700;list-style:none}
+.registration-box summary::-webkit-details-marker{display:none}
+.registration-box form{padding:0 15px 14px}
+.additional-box{margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fbfdfe}
+.additional-box summary{cursor:pointer;font-weight:700;color:var(--navy)}
+.issue-card{background:white;border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0}
+.issue-card .field{margin:8px 0}
+.issue-remove{background:#fff0ef;color:var(--red);padding:7px 10px;font-size:12px}
+.issue-photo{font-size:13px}
+@media(max-width:650px){#tab-fleet .vehicle-card{padding:12px 0}}.small-btn{padding:8px 11px;font-size:12px}
+@media(max-width:650px){.grid,.metric-grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}.vehicle-actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
-<header class="top">
-<div class="brand">
-<div>
-<small>ÁGUAS DO RIO</small>
-<h1>FROTA 360</h1>
-<div class="product">Gestão de Frota · Inspeção · Controle · Gestão</div>
-</div>
-<div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div>
-</div>
-</header>
-
+<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>FROTA 360</h1><div class="product">Gestão de Frota · Inspeção · Controle · Gestão</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
 <main class="wrap">
-
-<section id="publicView" class="hidden">
-<div class="panel">
-<h2>Checklist diário de veículos</h2>
-<p class="muted">Águas do Rio · Preencha todos os dados e verifique os nove itens do veículo.</p>
-<div id="publicMsg" class="status hidden"></div>
-<form id="publicForm">
+<section id="publicView" class="hidden"><div class="panel">
+<h2>Checklist diário de veículos</h2><p class="muted">Águas do Rio · Preencha todos os dados e verifique os nove itens do veículo.</p>
+<div id="publicMsg" class="status hidden"></div><form id="publicForm">
 <div class="grid">
 <div class="field"><label>Empresa</label><input value="Águas do Rio" readonly></div>
 <div class="field"><label>Equipe / Código da equipe *</label><input id="pubTeam" placeholder="Ex.: RIOSETCS-001" required></div>
@@ -128,641 +73,207 @@ button.danger{background:#b42318}
 <div class="field"><label>Colaborador 1</label><input id="pubCollab1"></div>
 <div class="field"><label>Colaborador 2</label><input id="pubCollab2"></div>
 </div>
-<p class="muted">Data e horário do envio serão registrados automaticamente.</p>
-<div id="publicChecklist"></div>
+<p class="muted">Data e horário do envio serão registrados automaticamente.</p><div id="publicChecklist"></div>
+<details class="additional-box" id="additionalIssuesBox"><summary>＋ Registrar problema adicional (fora do checklist)</summary>
+<p class="muted">Use esta área para defeitos não previstos nos nove itens, como ar-condicionado, limpador, bateria ou falhas mecânicas.</p>
+<div id="additionalIssuesList"></div>
+<button type="button" class="secondary" id="addIssueBtn">＋ Adicionar outro problema</button>
+</details>
 <button type="submit" id="publicSubmit">Enviar checklist</button>
-</form>
-</div>
-</section>
+</form></div></section>
 
 <section id="loginView" class="panel login">
-<h2>Acessar o Frota 360</h2>
-<p class="muted">Entre com seu e-mail e senha cadastrados.</p>
-<form id="loginForm">
-<div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
+<h2>Acessar o Frota 360</h2><p class="muted">Entre com seu e-mail e senha cadastrados.</p>
+<form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
 <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div>
-<button style="width:100%" type="submit">Entrar</button>
-</form>
-<div id="loginMsg" class="status hidden"></div>
+<button style="width:100%" type="submit">Entrar</button></form><div id="loginMsg" class="status hidden"></div>
 </section>
 
 <section id="appView" class="hidden">
-<div class="panel">
-<div class="bar">
-<div><h2 id="welcome">Bem-vindo</h2><div class="muted" id="roleText">Acesso administrativo</div></div>
-<button class="secondary" id="logoutBtn">Sair</button>
-</div>
-<div id="appMsg" class="status hidden"></div>
-</div>
-
-<div id="adminArea" class="hidden">
-<div class="panel">
-<h2>Painel administrativo</h2>
-<div class="muted">Acompanhamento da frota, histórico de inspeções e gestão de usuários.</div>
+<div class="panel"><div class="bar"><div><h2 id="welcome">Bem-vindo</h2><div class="muted" id="roleText">Acesso administrativo</div></div><button class="secondary" id="logoutBtn">Sair</button></div><div id="appMsg" class="status hidden"></div></div>
+<div id="adminArea" class="hidden"><div class="panel">
+<h2>Painel administrativo</h2><div class="muted">Acompanhamento da frota, histórico de inspeções e gestão de usuários.</div>
 <div class="tabs">
-<button class="active" data-tab="fleet">Situação da frota</button>
-<button data-tab="history">Histórico</button>
-<button data-tab="users">Usuários</button>
+<button class="active" data-tab="fleet">Situação da frota</button><button data-tab="history">Histórico</button><button data-tab="users">Usuários</button>
 </div>
 
 <div id="tab-fleet">
-<div class="bar">
-<strong>Resumo da frota</strong>
-<button class="secondary" id="refreshFleet">Atualizar painel</button>
-</div>
-
+<div class="bar"><strong>Resumo da frota</strong><button class="secondary" id="refreshFleet">Atualizar painel</button></div>
 <div class="metric-grid" style="margin-top:12px">
 <div class="metric apto"><div class="muted">Veículos aptos</div><div class="counter" id="countApto">0</div></div>
 <div class="metric oficina"><div class="muted">Na oficina</div><div class="counter" id="countOficina">0</div></div>
 </div>
+<div class="record"><h3>Distribuição da frota</h3><div class="chart-row"><span>Aptos</span><div class="chart-track"><div id="barApto" class="chart-fill apto"></div></div><strong id="chartApto">0</strong></div>
+<div class="chart-row"><span>Na oficina</span><div class="chart-track"><div id="barOficina" class="chart-fill oficina"></div></div><strong id="chartOficina">0</strong></div><div class="muted" id="fleetTotal">Total: 0 veículos</div></div>
 
-<div class="record">
-<h3>Distribuição da frota</h3>
-<div class="chart-row"><span>Aptos</span><div class="chart-track"><div id="barApto" class="chart-fill apto"></div></div><strong id="chartApto">0</strong></div>
-<div class="chart-row"><span>Na oficina</span><div class="chart-track"><div id="barOficina" class="chart-fill oficina"></div></div><strong id="chartOficina">0</strong></div>
-<div class="muted" id="fleetTotal">Total: 0 veículos</div>
-</div>
-
-<details class="add-vehicle-box">
-<summary>＋ Cadastrar veículo</summary>
-<form id="vehicleForm">
-<div class="grid">
-<div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required></div>
-<div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div>
-</div>
-<button type="submit" id="saveVehicleBtn">Cadastrar veículo</button>
-</form>
-</details>
-
+<details class="registration-box"><summary>＋ Cadastrar veículo</summary><form id="vehicleForm">
+<div class="grid"><div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required></div>
+<div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div></div>
+<button type="submit" id="saveVehicleBtn">Cadastrar veículo</button></form></details>
 <div class="bar"><h3>Veículos cadastrados</h3><span class="muted" id="vehicleCountLabel"></span></div>
-<input id="vehicleSearch" class="fleet-search" placeholder="Pesquisar por placa ou líder...">
 <div id="vehiclesList" class="muted">Carregando veículos...</div>
 </div>
 
-<div id="tab-history" class="hidden">
-<div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div>
-<div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div>
-<div id="historyDetail" class="hidden" style="margin-top:16px"></div>
-</div>
+<div id="tab-history" class="hidden"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div>
+<div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div><div id="historyDetail" class="hidden" style="margin-top:16px"></div></div>
 
-<div id="tab-users" class="hidden">
-<h3>Cadastro de usuários</h3>
+<div id="tab-users" class="hidden"><h3>Cadastro de usuários</h3>
 <p class="muted">Por segurança, a criação de contas é feita pelo administrador no painel de autenticação do Supabase. Não colocamos uma chave secreta no navegador.</p>
-<ol class="muted">
-<li>No Supabase, abra Authentication → Users.</li>
-<li>Clique em Add user e informe e-mail e senha.</li>
-<li>O perfil será criado automaticamente com a função padrão.</li>
-<li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li>
-</ol>
-</div>
-</div>
-</section>
-</main>
-
+<ol class="muted"><li>No Supabase, abra Authentication → Users.</li><li>Clique em Add user e informe e-mail e senha.</li><li>O perfil será criado automaticamente com a função padrão.</li><li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li></ol></div>
+</div></div>
+</section></main>
 <div class="footer">Frota 360 · Águas do Rio</div>
-
-<div id="photoViewer" class="photo-viewer hidden" role="dialog" aria-modal="true" aria-label="Visualização da foto">
-<button type="button" id="closePhotoViewer">Fechar ✕</button>
-<img id="photoViewerImage" src="" alt="Foto ampliada">
-</div>
+<div id="photoViewer" class="photo-viewer hidden" role="dialog" aria-modal="true" aria-label="Visualização da foto"><button type="button" id="closePhotoViewer">Fechar ✕</button><img id="photoViewerImage" src="" alt="Foto ampliada"></div>
 
 <script>
 const SUPABASE_URL='https://aypdvilwkritqxwfwtjt.supabase.co';
 const SUPABASE_KEY='sb_publishable_zDxR_mdhlR_f_eJuesZyFw_ziI3Uzie';
 const FUNCTION_URL=SUPABASE_URL+'/functions/v1/hyper-endpoint';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
 const items=['Pneus','Faróis e lanternas','Retrovisores','Para-brisa e vidros','Limpeza e organização','Estepe','Macaco','Chave de roda','Triângulo'];
-const leaderGroups=['Rafael','Maycon','Wesley','Emerson','Ricardo','Daniel'];
-const managementNames=['Supervisor Alamino','Supervisor Ivonildo','Coordenador Arthur'];
-
 let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null;
-let latestLeaderByPlate={};
 const $=id=>document.getElementById(id);
 const isPublicForm=new URLSearchParams(location.search).get('form')==='equipes';
 
-function message(id,text,type=''){
-const el=$(id);el.textContent=text;el.className='status '+type;el.classList.remove('hidden');
-}
+function message(id,text,type=''){const el=$(id);el.textContent=text;el.className='status '+type;el.classList.remove('hidden')}
 function hide(id){$(id).classList.add('hidden')}
-function escapeHtml(s){
-return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-function normalize(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function renderChecklist(target,prefix){$(target).innerHTML=items.map((name,i)=>`<div class="item"><h3>${i+1}. ${name}</h3><div class="choices"><label><input type="radio" name="${prefix}result${i}" value="Conforme" required> Conforme</label><label><input type="radio" name="${prefix}result${i}" value="Não conforme" required> Não conforme</label></div><div class="field"><label>Observação (se necessário)</label><textarea id="${prefix}obs${i}" placeholder="Descreva o problema, se houver"></textarea></div><div class="field"><label>Foto deste item (opcional)</label><input id="${prefix}photo${i}" type="file" accept="image/*" capture="environment"></div></div>`).join('')}
 
-function renderChecklist(target,prefix){
-$(target).innerHTML=items.map((name,i)=>`
-<div class="item">
-<h3>${i+1}. ${name}</h3>
-<div class="choices">
-<label><input type="radio" name="${prefix}result${i}" value="Conforme" required> Conforme</label>
-<label><input type="radio" name="${prefix}result${i}" value="Não conforme" required> Não conforme</label>
-</div>
-<div class="field">
-<label>Observação (se necessário)</label>
-<textarea id="${prefix}obs${i}" placeholder="Descreva o problema, se houver"></textarea>
-</div>
-<div class="field">
-<label>Foto deste item (opcional)</label>
-<input id="${prefix}photo${i}" type="file" accept="image/*" capture="environment">
-</div>
-</div>`).join('');
+/* PROBLEMAS ADICIONAIS FORA DO CHECKLIST */
+let additionalIssueCount=0;
+function addAdditionalIssue(){
+const index=additionalIssueCount++,wrap=document.createElement('div');wrap.className='issue-card';wrap.dataset.issue=index;
+wrap.innerHTML=`<div class="bar"><strong>Problema adicional</strong><button type="button" class="issue-remove" data-remove-issue="${index}">Remover</button></div>
+<div class="field"><label>Tipo de problema *</label><select id="issue-type-${index}" required>
+<option value="">Selecione</option><option>Ar-condicionado</option><option>Limpador de para-brisa</option><option>Bateria</option><option>Defeito mecânico</option><option>Problema elétrico</option><option>Freios</option><option>Suspensão</option><option>Motor</option><option>Outro</option></select></div>
+<div class="field"><label>Descreva o problema *</label><textarea id="issue-description-${index}" placeholder="Informe o defeito identificado" required></textarea></div>
+<div class="field"><label>Foto do problema (opcional)</label><input class="issue-photo" id="issue-photo-${index}" type="file" accept="image/*" capture="environment"></div>`;
+$('additionalIssuesList').appendChild(wrap);
 }
+$('addIssueBtn').addEventListener('click',addAdditionalIssue);
+$('additionalIssuesList').addEventListener('click',e=>{const btn=e.target.closest('[data-remove-issue]');if(btn)btn.closest('.issue-card').remove()});
 
 /* FORMULÁRIO PÚBLICO */
 async function submitPublicForm(e){
-e.preventDefault();
-const btn=$('publicSubmit');
-btn.disabled=true;btn.textContent='Enviando checklist...';hide('publicMsg');
-
+e.preventDefault();const btn=$('publicSubmit');btn.disabled=true;btn.textContent='Enviando checklist...';hide('publicMsg');
 try{
-const team=$('pubTeam').value.trim();
-const vehicle=$('pubVehicle').value.trim();
-const leader=$('pubLeader').value.trim();
-const checklist=[],formData=new FormData();
-
+const team=$('pubTeam').value.trim(),vehicle=$('pubVehicle').value.trim(),leader=$('pubLeader').value.trim(),checklist=[],formData=new FormData();
 for(let i=0;i<items.length;i++){
-const result=document.querySelector(`input[name="pubresult${i}"]:checked`)?.value;
-if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');
-const observation=$('pubobs'+i).value.trim();
-checklist.push({item_name:items[i],result,observation:observation||null});
-const file=$('pubphoto'+i).files[0];
-if(file){
-if(!file.type.startsWith('image/'))throw new Error('O arquivo do item '+items[i]+' não é uma imagem.');
-if(file.size>5*1024*1024)throw new Error('A foto do item '+items[i]+' ultrapassa 5 MB.');
-formData.append('photo_'+i,file);
+const result=document.querySelector(`input[name="pubresult${i}"]:checked`)?.value;if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');
+const observation=$('pubobs'+i).value.trim();checklist.push({item_name:items[i],result,observation:observation||null});
+const file=$('pubphoto'+i).files[0];if(file){if(!file.type.startsWith('image/'))throw new Error('O arquivo do item '+items[i]+' não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto do item '+items[i]+' ultrapassa 5 MB.');formData.append('photo_'+i,file)}
 }
+let issuePhotoIndex=items.length;
+for(const card of $('additionalIssuesList').querySelectorAll('.issue-card')){
+const idx=card.dataset.issue,type=$('issue-type-'+idx).value,description=$('issue-description-'+idx).value.trim();
+if(!type||!description)throw new Error('Preencha o tipo e a descrição de todos os problemas adicionais ou remova os campos vazios.');
+checklist.push({item_name:'Problema adicional — '+type,result:'Não conforme',observation:description});
+const file=$('issue-photo-'+idx).files[0];
+if(file){if(!file.type.startsWith('image/'))throw new Error('O anexo do problema adicional não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto de um problema adicional ultrapassa 5 MB.');formData.append('photo_'+issuePhotoIndex,file)}
+issuePhotoIndex++;
 }
-
-formData.append('team_name',team);
-formData.append('vehicle_label',vehicle);
-formData.append('leader',leader);
-formData.append('collaborator_1',$('pubCollab1').value.trim());
-formData.append('collaborator_2',$('pubCollab2').value.trim());
-formData.append('items',JSON.stringify(checklist));
-
-const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY},body:formData});
-const result=await response.json().catch(()=>({}));
+formData.append('team_name',team);formData.append('vehicle_label',vehicle);formData.append('leader',leader);formData.append('collaborator_1',$('pubCollab1').value.trim());formData.append('collaborator_2',$('pubCollab2').value.trim());formData.append('items',JSON.stringify(checklist));
+const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY},body:formData});const result=await response.json().catch(()=>({}));
 if(!response.ok)throw new Error(result.error||result.message||'Erro ao enviar. Código: '+response.status);
-
-message('publicMsg','Checklist enviado com sucesso! A equipe já consta como recebida no sistema.','success');
-$('publicForm').reset();
-renderChecklist('publicChecklist','pub');
-
-}catch(err){
-message('publicMsg','Não foi possível enviar o checklist: '+err.message,'error');
-}finally{
-btn.disabled=false;btn.textContent='Enviar checklist';
-}
+message('publicMsg','Checklist enviado com sucesso! A equipe já consta como recebida no sistema.','success');$('publicForm').reset();$('additionalIssuesList').innerHTML='';$('additionalIssuesBox').open=false;additionalIssueCount=0;renderChecklist('publicChecklist','pub');
+}catch(err){message('publicMsg','Não foi possível enviar o checklist: '+err.message,'error')}
+finally{btn.disabled=false;btn.textContent='Enviar checklist'}
 }
 
-/* LOGIN ADMINISTRATIVO */
+/* LOGIN — ACESSO SOMENTE ADMINISTRADOR */
 async function showApp(session){
-currentUser=session.user;
-const {data:profile,error}=await db.from('profiles').select('full_name,role').eq('id',currentUser.id).single();
-
-if(error||!profile){
-message('loginMsg','Não foi possível localizar seu perfil: '+(error?.message||'Perfil não encontrado'),'error');
-await db.auth.signOut();return;
-}
-if(profile.role!=='admin'){
-message('loginMsg','Acesso restrito ao administrador.','error');
-await db.auth.signOut();return;
+currentUser=session.user;const {data:profile,error}=await db.from('profiles').select('full_name,role').eq('id',currentUser.id).single();
+if(error||!profile){message('loginMsg','Não foi possível localizar seu perfil: '+(error?.message||'Perfil não encontrado'),'error');await db.auth.signOut();return}
+if(profile.role!=='admin'){message('loginMsg','Acesso restrito ao administrador.');await db.auth.signOut();return}
+currentProfile=profile;hide('loginView');$('appView').classList.remove('hidden');$('adminArea').classList.remove('hidden');$('userBadge').classList.remove('hidden');
+$('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>Administrador';$('welcome').textContent='Olá, '+(profile.full_name||'administrador');$('roleText').textContent='Acesso de administrador';
+await Promise.all([loadHistory(),loadFleet()]);startFleetRealtime();
 }
 
-currentProfile=profile;
-hide('loginView');
-$('appView').classList.remove('hidden');
-$('adminArea').classList.remove('hidden');
-$('userBadge').classList.remove('hidden');
-$('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>Administrador';
-$('welcome').textContent='Olá, '+(profile.full_name||'administrador');
-$('roleText').textContent='Acesso de administrador';
-
-await Promise.all([loadHistory(),loadFleet()]);
-startFleetRealtime();
-}
-
-/* HISTÓRICO E FOTOS */
-async function getInspections(){
-const {data,error}=await db.from('inspections')
-.select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)')
-.order('inspection_date',{ascending:false});
-if(error)throw error;
-return data||[];
-}
-
-function formatInspectionDate(value){
-if(!value)return'Data não informada';
-const date=new Date(value);
-return Number.isNaN(date.getTime())?String(value):date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
-}
-
-function openPhotoViewer(url,title){
-$('photoViewerImage').src=url;
-$('photoViewerImage').alt=title||'Foto ampliada';
-$('photoViewer').classList.remove('hidden');
-}
-function closePhotoViewer(){
-$('photoViewer').classList.add('hidden');
-$('photoViewerImage').src='';
-}
-
+/* HISTÓRICO E FOTOS — MANTIDOS */
+async function getInspections(){const {data,error}=await db.from('inspections').select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false});if(error)throw error;return data||[]}
+function formatInspectionDate(value){if(!value)return'Data não informada';const date=new Date(value);return Number.isNaN(date.getTime())?String(value):date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+function openPhotoViewer(url,title){$('photoViewerImage').src=url;$('photoViewerImage').alt=title||'Foto ampliada';$('photoViewer').classList.remove('hidden')}
+function closePhotoViewer(){$('photoViewer').classList.add('hidden');$('photoViewerImage').src=''}
 async function renderInspectionRecord(r){
-const div=document.createElement('div');
-div.className='record';
-const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');
-
-div.innerHTML=`
-<div class="bar">
-<div>
-<h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3>
-<div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div>
-<div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div>
-</div>
-<span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span>
-</div>`;
-
-for(const it of r.inspection_items||[]){
-const line=document.createElement('div');
-line.className='detail-item';
-line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
-
-if(it.photo_path){
-const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);
-if(!error&&file?.signedUrl){
-const img=document.createElement('img');
-img.className='photo-full';
-img.src=file.signedUrl;
-img.alt='Foto '+it.item_name;
-img.title='Clique para ampliar a foto';
-img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto '+it.item_name));
-line.appendChild(img);
-}else{
-const note=document.createElement('div');
-note.className='muted';
-note.textContent='Foto anexada, mas não foi possível abrir neste momento.';
-line.appendChild(note);
-}
-}
-div.appendChild(line);
-}
-return div;
-}
-
+const div=document.createElement('div');div.className='record';const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');
+div.innerHTML=`<div class="bar"><div><h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3><div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div><div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div></div><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></div>`;
+for(const it of r.inspection_items||[]){const line=document.createElement('div');line.className='detail-item';line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
+if(it.photo_path){const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);if(!error&&file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.src=file.signedUrl;img.alt='Foto '+it.item_name;img.title='Clique para ampliar a foto';img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto '+it.item_name));line.appendChild(img)}else{const note=document.createElement('div');note.className='muted';note.textContent='Foto anexada, mas não foi possível abrir neste momento.';line.appendChild(note)}}div.appendChild(line)}
+return div}
 async function showHistoryDetails(inspectionId){
-const row=(window.frotaHistoryRows||[]).find(r=>r.id===inspectionId);
-if(!row)return;
-const detail=$('historyDetail');
-detail.classList.remove('hidden');
-detail.innerHTML=`
-<div class="detail-head">
-<div><h2>${escapeHtml(row.vehicle_label||'Veículo não informado')}</h2>
-<div class="muted">${escapeHtml(row.team_name||'Equipe não informada')} · ${escapeHtml(formatInspectionDate(row.inspection_date))}</div></div>
-<button class="secondary" id="backHistory">Voltar à lista</button>
-</div>
-<div id="historyDetailContent"></div>`;
-$('historyList').classList.add('hidden');
-$('backHistory').addEventListener('click',()=>{
-detail.classList.add('hidden');
-$('historyList').classList.remove('hidden');
-detail.innerHTML='';
-});
-$('historyDetailContent').appendChild(await renderInspectionRecord(row));
-}
-
+const row=(window.frotaHistoryRows||[]).find(r=>r.id===inspectionId);if(!row)return;const detail=$('historyDetail');detail.classList.remove('hidden');
+detail.innerHTML=`<div class="detail-head"><div><h2>${escapeHtml(row.vehicle_label||'Veículo não informado')}</h2><div class="muted">${escapeHtml(row.team_name||'Equipe não informada')} · ${escapeHtml(formatInspectionDate(row.inspection_date))}</div></div><button class="secondary" id="backHistory">Voltar à lista</button></div><div id="historyDetailContent"></div>`;
+$('historyList').classList.add('hidden');$('backHistory').addEventListener('click',()=>{detail.classList.add('hidden');$('historyList').classList.remove('hidden');detail.innerHTML=''});
+$('historyDetailContent').appendChild(await renderInspectionRecord(row))}
 async function loadHistory(){
-const box=$('historyList'),detail=$('historyDetail');
-box.classList.remove('hidden');
-detail.classList.add('hidden');
-detail.innerHTML='';
-box.textContent='Carregando registros...';
-
-try{
-const rows=await getInspections();
-window.frotaHistoryRows=rows;
-if(!rows.length){
-box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';
-return;
-}
-box.innerHTML='';
-for(const r of rows){
-const line=document.createElement('div');
-line.className='history-row';
-const info=document.createElement('div');
-const plate=document.createElement('button');
-plate.type='button';
-plate.className='plate-link';
-plate.textContent=r.vehicle_label||'Veículo não informado';
-plate.addEventListener('click',()=>showHistoryDetails(r.id));
-
-const meta=document.createElement('div');
-meta.className='history-meta';
-meta.textContent=(r.team_name||'Equipe não informada')+' · '+formatInspectionDate(r.inspection_date);
-const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length;
-info.append(plate,meta);
-
-const status=document.createElement('span');
-status.className='pill '+(bad?'bad':'good');
-status.textContent=bad?bad+' não conformidade(s)':'Concluída';
-line.append(info,status);
-box.appendChild(line);
-}
-}catch(err){
-box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>';
-}
+const box=$('historyList'),detail=$('historyDetail');box.classList.remove('hidden');detail.classList.add('hidden');detail.innerHTML='';box.textContent='Carregando registros...';
+try{const rows=await getInspections();window.frotaHistoryRows=rows;if(!rows.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';
+for(const r of rows){const line=document.createElement('div');line.className='history-row';const info=document.createElement('div'),plate=document.createElement('button');plate.type='button';plate.className='plate-link';plate.textContent=r.vehicle_label||'Veículo não informado';plate.addEventListener('click',()=>showHistoryDetails(r.id));
+const meta=document.createElement('div');meta.className='history-meta';meta.textContent=(r.team_name||'Equipe não informada')+' · '+formatInspectionDate(r.inspection_date);const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length;info.append(plate,meta);
+const status=document.createElement('span');status.className='pill '+(bad?'bad':'good');status.textContent=bad?bad+' não conformidade(s)':'Concluída';line.append(info,status);box.appendChild(line)}
+}catch(err){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>'}
 }
 
-/* GESTÃO DA FROTA */
+/* GESTÃO DE FROTA */
 async function loadFleet(){
-const box=$('vehiclesList');
-box.textContent='Carregando veículos...';
-
+const box=$('vehiclesList');box.textContent='Carregando veículos...';
 try{
-const {data,error}=await db.from('vehicles')
-.select('id,company,plate,status,workshop_reason,status_updated_at')
-.order('plate',{ascending:true});
-if(error)throw error;
-
-vehiclesCache=data||[];
-await loadVehicleLeaders();
-renderFleetDashboard();
-renderVehicles();
-
-}catch(err){
-box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'</div>';
-message('appMsg','Verifique a permissão de leitura da tabela vehicles: '+err.message,'error');
+const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at').order('plate',{ascending:true});
+if(error)throw error;vehiclesCache=data||[];renderFleetDashboard();renderVehicles();
+}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'</div>';message('appMsg','Verifique a permissão de leitura da tabela vehicles: '+err.message,'error')}
 }
-}
-
-async function loadVehicleLeaders(){
-latestLeaderByPlate={};
-try{
-const {data,error}=await db.from('inspections')
-.select('vehicle_label,leader,inspection_date')
-.order('inspection_date',{ascending:false});
-if(error)throw error;
-
-for(const row of data||[]){
-const plate=normalize(row.vehicle_label);
-if(plate&&!latestLeaderByPlate[plate]&&row.leader){
-latestLeaderByPlate[plate]=row.leader.trim();
-}
-}
-}catch(err){
-console.warn('Não foi possível consultar os líderes das inspeções:',err.message);
-}
-}
-
 function renderFleetDashboard(){
-const aptos=vehiclesCache.filter(v=>(v.status||'Apto')==='Apto').length;
-const oficina=vehiclesCache.filter(v=>v.status==='Na oficina').length;
-const total=vehiclesCache.length;
-
-$('countApto').textContent=aptos;
-$('countOficina').textContent=oficina;
-$('chartApto').textContent=aptos;
-$('chartOficina').textContent=oficina;
-$('fleetTotal').textContent='Total: '+total+' veículo(s)';
-$('barApto').style.width=(total?aptos/total*100:0)+'%';
-$('barOficina').style.width=(total?oficina/total*100:0)+'%';
-$('vehicleCountLabel').textContent=total+' cadastrado(s)';
+const aptos=vehiclesCache.filter(v=>(v.status||'Apto')==='Apto').length,oficina=vehiclesCache.filter(v=>v.status==='Na oficina').length,total=vehiclesCache.length;
+$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('fleetTotal').textContent='Total: '+total+' veículo(s)';
+$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)';
 }
-
-function getVehicleLeader(v){
-return latestLeaderByPlate[normalize(v.plate)]||'';
-}
-
-function getVehicleGroup(leader){
-const n=normalize(leader);
-
-if(n.includes('alamino'))return'Veículos da gestão';
-if(n.includes('ivonildo'))return'Veículos da gestão';
-if(n.includes('arthur'))return'Veículos da gestão';
-
-for(const name of leaderGroups){
-if(n===normalize(name)||n.includes(normalize(name)))return name;
-}
-return'Outros veículos';
-}
-
 function renderVehicles(){
-const box=$('vehiclesList');
-const search=normalize($('vehicleSearch').value);
-
-if(!vehiclesCache.length){
-box.innerHTML='<p class="muted">Nenhum veículo cadastrado. Use o botão Cadastrar veículo para começar.</p>';
-return;
+const box=$('vehiclesList');if(!vehiclesCache.length){box.innerHTML='<p class="muted">Nenhum veículo cadastrado. Use o formulário acima para começar.</p>';return}box.innerHTML='';
+for(const v of vehiclesCache){const status=v.status||'Apto',card=document.createElement('div');card.className='vehicle-card';
+card.innerHTML=`<div class="bar"><div><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Empresa não informada')}</div></div><span class="pill ${status==='Apto'?'good':'pending'}">${escapeHtml(status)}</span></div>
+<div class="field"><label>Situação do veículo</label><select id="vehicle-status-${v.id}"><option value="Apto" ${status==='Apto'?'selected':''}>Apto</option><option value="Na oficina" ${status==='Na oficina'?'selected':''}>Na oficina</option></select></div>
+<div class="field" id="reason-wrap-${v.id}"><label>Motivo / observação da oficina</label><textarea id="vehicle-reason-${v.id}" placeholder="Informe o motivo quando o veículo estiver na oficina">${escapeHtml(v.workshop_reason||'')}</textarea></div>
+<div class="bar"><span class="muted">Atualizado: ${v.status_updated_at?escapeHtml(formatInspectionDate(v.status_updated_at)):'Sem atualização'}</span><button class="small-btn" type="button" data-save-vehicle="${v.id}">Salvar situação</button></div>`;
+box.appendChild(card);
+const sel=$('vehicle-status-'+v.id),wrap=$('reason-wrap-'+v.id);const updateReason=()=>wrap.classList.toggle('hidden',sel.value!=='Na oficina');sel.addEventListener('change',updateReason);updateReason();
 }
-
-const groups={};
-const order=[...leaderGroups,'Veículos da gestão','Outros veículos'];
-
-for(const name of order)groups[name]=[];
-
-for(const v of vehiclesCache){
-const leader=getVehicleLeader(v);
-const group=getVehicleGroup(leader);
-const searchable=normalize(v.plate+' '+leader+' '+(v.company||''));
-if(search&&!searchable.includes(search))continue;
-groups[group].push({...v,leader});
+box.querySelectorAll('[data-save-vehicle]').forEach(btn=>btn.addEventListener('click',()=>saveVehicleStatus(btn.dataset.saveVehicle)));
 }
-
-box.innerHTML='';
-let found=0;
-
-for(const groupName of order){
-const list=groups[groupName];
-if(!list.length)continue;
-found+=list.length;
-
-const details=document.createElement('details');
-details.className='fleet-group';
-
-const summary=document.createElement('summary');
-summary.textContent=groupName+' · '+list.length+' veículo(s)';
-details.appendChild(summary);
-
-const content=document.createElement('div');
-content.className='fleet-group-content';
-
-for(const v of list){
-const status=v.status||'Apto';
-const entry=document.createElement('details');
-entry.className='vehicle-entry';
-
-const head=document.createElement('summary');
-const left=document.createElement('div');
-left.innerHTML=`<strong>${escapeHtml(v.plate)}</strong><div class="muted">${escapeHtml(v.leader||'Líder não identificado')}</div>`;
-const badge=document.createElement('span');
-badge.className='pill '+(status==='Apto'?'good':'pending');
-badge.textContent=status==='Apto'?'Apto':'Oficina';
-head.append(left,badge);
-entry.appendChild(head);
-
-const edit=document.createElement('div');
-edit.className='vehicle-edit';
-edit.innerHTML=`
-<div class="field">
-<label>Situação do veículo</label>
-<select id="vehicle-status-${v.id}">
-<option value="Apto" ${status==='Apto'?'selected':''}>Apto</option>
-<option value="Na oficina" ${status==='Na oficina'?'selected':''}>Na oficina</option>
-</select>
-</div>
-<div class="field" id="reason-wrap-${v.id}">
-<label>Motivo / observação da oficina</label>
-<textarea id="vehicle-reason-${v.id}" placeholder="Informe o motivo quando o veículo estiver na oficina">${escapeHtml(v.workshop_reason||'')}</textarea>
-</div>
-<div class="muted">Empresa: ${escapeHtml(v.company||'Não informada')}</div>
-<div class="muted">Atualizado: ${v.status_updated_at?escapeHtml(formatInspectionDate(v.status_updated_at)):'Sem atualização'}</div>
-<div style="margin-top:10px"><button class="small-btn" type="button" data-save-vehicle="${v.id}">Salvar alterações</button></div>
-`;
-entry.appendChild(edit);
-content.appendChild(entry);
-
-const sel=edit.querySelector('#vehicle-status-'+v.id);
-const wrap=edit.querySelector('#reason-wrap-'+v.id);
-const updateReason=()=>wrap.classList.toggle('hidden',sel.value!=='Na oficina');
-sel.addEventListener('change',updateReason);
-updateReason();
-}
-
-details.appendChild(content);
-box.appendChild(details);
-}
-
-if(!found){
-box.innerHTML='<p class="muted">Nenhum veículo encontrado para essa pesquisa.</p>';
-}
-
-box.querySelectorAll('[data-save-vehicle]').forEach(btn=>{
-btn.addEventListener('click',()=>saveVehicleStatus(btn.dataset.saveVehicle));
-});
-}
-
 async function saveVehicleStatus(id){
-const status=$('vehicle-status-'+id).value;
-const reason=$('vehicle-reason-'+id).value.trim();
-
-if(status==='Na oficina'&&!reason){
-message('appMsg','Informe o motivo para colocar o veículo na oficina.','error');
-$('vehicle-reason-'+id).focus();
-return;
-}
-
-const btn=document.querySelector(`[data-save-vehicle="${id}"]`);
-btn.disabled=true;
-btn.textContent='Salvando...';
-
+const status=$('vehicle-status-'+id).value,reason=$('vehicle-reason-'+id).value.trim();
+if(status==='Na oficina'&&!reason){message('appMsg','Informe o motivo para colocar o veículo na oficina.','error');$('vehicle-reason-'+id).focus();return}
+const btn=document.querySelector(`[data-save-vehicle="${id}"]`);btn.disabled=true;btn.textContent='Salvando...';
 try{
-const {error}=await db.from('vehicles').update({
-status,
-workshop_reason:status==='Na oficina'?reason:null,
-status_updated_at:new Date().toISOString()
-}).eq('id',id);
-
-if(error)throw error;
-message('appMsg','Situação do veículo atualizada com sucesso.','success');
-await loadFleet();
-
-}catch(err){
-message('appMsg','Não foi possível atualizar. Verifique a política de acesso da tabela vehicles: '+err.message,'error');
-}finally{
-if(btn){btn.disabled=false;btn.textContent='Salvar alterações';}
+const {error}=await db.from('vehicles').update({status,workshop_reason:status==='Na oficina'?reason:null,status_updated_at:new Date().toISOString()}).eq('id',id);
+if(error)throw error;message('appMsg','Situação do veículo atualizada com sucesso.','success');await loadFleet();
+}catch(err){message('appMsg','Não foi possível atualizar. Verifique a política de acesso da tabela vehicles: '+err.message,'error')}
+finally{if(btn){btn.disabled=false;btn.textContent='Salvar situação'}}
 }
-}
-
 async function registerVehicle(e){
-e.preventDefault();
-const btn=$('saveVehicleBtn');
-const plate=$('vehiclePlate').value.trim().toUpperCase();
-const company=$('vehicleCompany').value.trim()||'Águas do Rio';
-btn.disabled=true;
-btn.textContent='Cadastrando...';
-
+e.preventDefault();const btn=$('saveVehicleBtn'),plate=$('vehiclePlate').value.trim().toUpperCase(),company=$('vehicleCompany').value.trim()||'Águas do Rio';btn.disabled=true;btn.textContent='Cadastrando...';
 try{
-const {error}=await db.from('vehicles').insert({
-plate,company,status:'Apto',workshop_reason:null,status_updated_at:new Date().toISOString()
-});
-if(error)throw error;
-
-$('vehicleForm').reset();
-$('vehicleCompany').value='Águas do Rio';
-message('appMsg','Veículo cadastrado como Apto.','success');
-await loadFleet();
-
-}catch(err){
-message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error');
-}finally{
-btn.disabled=false;
-btn.textContent='Cadastrar veículo';
+const {error}=await db.from('vehicles').insert({plate,company,status:'Apto',workshop_reason:null,status_updated_at:new Date().toISOString()});
+if(error)throw error;$('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';message('appMsg','Veículo cadastrado como Apto.','success');await loadFleet();
+}catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}
+finally{btn.disabled=false;btn.textContent='Cadastrar veículo'}
 }
-}
-
 function startFleetRealtime(){
 if(fleetChannel)db.removeChannel(fleetChannel);
-fleetChannel=db.channel('frota360-vehicles-live')
-.on('postgres_changes',{event:'*',schema:'public',table:'vehicles'},()=>loadFleet())
-.subscribe();
+fleetChannel=db.channel('frota360-vehicles-live').on('postgres_changes',{event:'*',schema:'public',table:'vehicles'},()=>loadFleet()).subscribe();
 }
 
 /* EVENTOS */
-$('loginForm').addEventListener('submit',async e=>{
-e.preventDefault();
-hide('loginMsg');
-const {data,error}=await db.auth.signInWithPassword({
-email:$('email').value.trim(),
-password:$('password').value
-});
-if(error){
-message('loginMsg','Não foi possível entrar: '+error.message,'error');
-return;
-}
-await showApp(data.session);
-});
-
-$('logoutBtn').addEventListener('click',async()=>{
-if(fleetChannel)await db.removeChannel(fleetChannel);
-await db.auth.signOut();
-location.reload();
-});
-
-$('publicForm').addEventListener('submit',submitPublicForm);
-$('refreshHistory').addEventListener('click',loadHistory);
-$('refreshFleet').addEventListener('click',loadFleet);
-$('vehicleForm').addEventListener('submit',registerVehicle);
-
-$('vehicleSearch').addEventListener('input',renderVehicles);
-
-$('closePhotoViewer').addEventListener('click',closePhotoViewer);
-$('photoViewer').addEventListener('click',e=>{
-if(e.target.id==='photoViewer')closePhotoViewer();
-});
-document.addEventListener('keydown',e=>{
-if(e.key==='Escape')closePhotoViewer();
-});
-
-document.querySelectorAll('[data-tab]').forEach(b=>{
-b.addEventListener('click',()=>{
-document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));
-['fleet','history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));
-if(b.dataset.tab==='history')loadHistory();
-if(b.dataset.tab==='fleet')loadFleet();
-});
-});
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();hide('loginMsg');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){message('loginMsg','Não foi possível entrar: '+error.message,'error');return}await showApp(data.session)});
+$('logoutBtn').addEventListener('click',async()=>{if(fleetChannel)await db.removeChannel(fleetChannel);await db.auth.signOut();location.reload()});
+$('publicForm').addEventListener('submit',submitPublicForm);$('refreshHistory').addEventListener('click',loadHistory);$('refreshFleet').addEventListener('click',loadFleet);$('vehicleForm').addEventListener('submit',registerVehicle);
+$('closePhotoViewer').addEventListener('click',closePhotoViewer);$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer')closePhotoViewer()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer()});
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['fleet','history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='history')loadHistory();if(b.dataset.tab==='fleet')loadFleet()}));
 
 /* INICIALIZAÇÃO */
-if(isPublicForm){
-hide('loginView');
-$('publicView').classList.remove('hidden');
-renderChecklist('publicChecklist','pub');
-}else{
-hide('publicView');
-db.auth.getSession().then(({data})=>{
-if(data.session)showApp(data.session);
-});
-}
+if(isPublicForm){hide('loginView');$('publicView').classList.remove('hidden');renderChecklist('publicChecklist','pub')}
+else{hide('publicView');db.auth.getSession().then(({data})=>{if(data.session)showApp(data.session)})}
 </script>
 </body>
 </html>
