@@ -1,46 +1,256 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Frota 360 | Águas do Rio</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Águas do Rio – Recuperação de Cortados</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#b42318}.hidden{display:none!important}.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}.brand h1{font-size:22px;margin:5px 0 0}.brand .product{font-size:13px;color:#d5edf2}.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}.login{max-width:430px;margin:50px auto}.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}.muted{color:var(--muted);font-size:14px}.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#385365}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}.field textarea{min-height:75px;resize:vertical}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button{background:#e8f1f5;color:var(--navy)}.tabs button.active{background:var(--blue);color:white}.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.item h3{margin:0 0 10px;font-size:16px}.choices{display:flex;gap:10px;flex-wrap:wrap}.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}.choices input{margin-right:5px}.item input[type=file]{max-width:100%;font-size:13px}.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}.error{background:#fff0ef;color:var(--red)}.success{background:#eaf7f0;color:var(--green)}.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.record h3{margin:0 0 5px}.record img{width:110px;height:90px;object-fit:cover;border-radius:8px;margin:6px 6px 0 0}.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}.pill.bad{background:#ffeded;color:#a51d16}.pill.good{background:#e8f7ef;color:#16794b}.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}@media(max-width:650px){.grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}}
-</style></head>
+:root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b;--orange:#a15c00}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--blue);color:white;font-weight:700}button:disabled{opacity:.55;cursor:wait}
+button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#b42318}.hidden{display:none!important}
+.top{background:linear-gradient(115deg,var(--navy),#075c7b);color:white;padding:22px 18px}.brand{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand small{display:block;letter-spacing:2px;font-weight:700;color:#9cebf0}.brand h1{font-size:22px;margin:5px 0 0}.brand .product{font-size:13px;color:#d5edf2}
+.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px #15384b0a;margin-bottom:18px}
+.login{max-width:430px;margin:50px auto}.login h2,.panel h2{margin:0 0 8px;color:var(--navy)}.muted{color:var(--muted);font-size:14px}
+.field{display:flex;flex-direction:column;gap:6px;margin:13px 0}.field label{font-size:13px;font-weight:700;color:#385365}
+.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #cbd9e0;border-radius:9px;background:white;color:var(--ink)}.field textarea{min-height:75px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.tabs button{background:#e8f1f5;color:var(--navy)}.tabs button.active{background:var(--blue);color:white}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.item h3{margin:0 0 10px;font-size:16px}
+.choices{display:flex;gap:10px;flex-wrap:wrap}.choices label{border:1px solid var(--line);padding:9px 12px;border-radius:9px;font-size:14px}.choices input{margin-right:5px}
+.item input[type=file]{max-width:100%;font-size:13px}.status{padding:10px 12px;border-radius:9px;background:#eef6f8;color:var(--navy);margin:12px 0;font-size:14px}
+.error{background:#fff0ef;color:var(--red)}.success{background:#eaf7f0;color:var(--green)}
+.record{border:1px solid var(--line);border-radius:12px;padding:14px;margin:12px 0}.record h3{margin:0 0 5px}
+.pill{display:inline-block;border-radius:30px;padding:4px 9px;font-size:12px;font-weight:700;background:#edf2f5}.pill.bad{background:#ffeded;color:#a51d16}.pill.good{background:#e8f7ef;color:#16794b}.pill.pending{background:#fff4df;color:#925400}
+.counter{font-size:27px;font-weight:800;color:var(--navy)}.footer{text-align:center;color:#78909e;font-size:12px;padding:25px}
+.history-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 4px;border-bottom:1px solid var(--line)}.history-row:last-child{border-bottom:0}
+.plate-link{background:transparent;color:var(--navy);padding:4px 0;font-size:17px;font-weight:800;text-align:left}.plate-link:hover{text-decoration:underline;color:var(--blue)}
+.history-meta{font-size:13px;color:var(--muted);margin-top:4px}.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.detail-item{padding:15px 0;border-bottom:1px solid var(--line)}.detail-item:last-child{border-bottom:0}
+.photo-full{display:block;max-width:100%;width:auto;height:auto;max-height:240px;object-fit:contain;background:#f2f6f8;border:1px solid var(--line);border-radius:10px;margin-top:10px;cursor:zoom-in}
+.photo-viewer{position:fixed;inset:0;background:rgba(4,20,31,.94);z-index:9999;display:flex;align-items:center;justify-content:center;padding:55px 18px 20px}
+.photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}.photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
+.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fbfdfe}
+.metric .counter{font-size:32px}.metric.apto{border-left:5px solid var(--green)}.metric.oficina{border-left:5px solid var(--orange)}
+.chart-row{display:grid;grid-template-columns:100px 1fr 42px;align-items:center;gap:10px;margin:13px 0;font-size:13px}
+.chart-track{height:15px;background:#edf2f5;border-radius:20px;overflow:hidden}.chart-fill{height:100%;border-radius:20px;min-width:0}.chart-fill.apto{background:#22a06b}.chart-fill.oficina{background:#e39a2d}
+.vehicle-card{border:1px solid var(--line);border-radius:12px;padding:15px;margin:12px 0}.vehicle-card h3{margin:0;color:var(--navy)}
+.vehicle-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+/* Interface administrativa mais limpa */
+#tab-fleet .metric-grid,#tab-fleet .record:has(.chart-row){display:none}
+#tab-fleet .record{box-shadow:none;border-color:transparent;padding:8px 0}
+#tab-fleet .vehicle-card{background:#fff;box-shadow:none}
+#tab-fleet .vehicle-card .field{margin:8px 0}
+#tab-fleet .vehicle-card{padding:12px 4px;border-width:0 0 1px;border-radius:0}
+#tab-fleet> .bar{margin-top:18px}
+.registration-box{margin:12px 0;border:1px solid var(--line);border-radius:12px;background:#fbfdfe}
+.registration-box summary{cursor:pointer;padding:13px 15px;color:var(--navy);font-weight:700;list-style:none}
+.registration-box summary::-webkit-details-marker{display:none}
+.registration-box form{padding:0 15px 14px}
+.additional-box{margin:18px 0;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fbfdfe}
+.additional-box summary{cursor:pointer;font-weight:700;color:var(--navy)}
+.issue-card{background:white;border:1px solid var(--line);border-radius:10px;padding:12px;margin:12px 0}
+.issue-card .field{margin:8px 0}
+.issue-remove{background:#fff0ef;color:var(--red);padding:7px 10px;font-size:12px}
+.issue-photo{font-size:13px}
+.fleet-subtabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.fleet-subtabs button{background:#edf3f6;color:var(--navy);padding:9px 12px}.fleet-subtabs button.active{background:var(--navy);color:#fff}
+.fleet-search{max-width:360px}.fleet-group{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:#fff}.fleet-group summary{padding:13px 15px;cursor:pointer;font-weight:700;color:var(--navy)}.fleet-group-content{padding:0 15px 12px}.fleet-table-wrap{overflow:auto}.fleet-table{width:100%;border-collapse:collapse;font-size:13px;min-width:850px}.fleet-table th,.fleet-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.fleet-table th{background:#f5f8fa;color:#395466}.fleet-table input,.fleet-table select{max-width:180px;padding:7px;border:1px solid #cbd9e0;border-radius:7px}.metric-grid.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:800px){.metric-grid.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){#tab-fleet .vehicle-card{padding:12px 0}}.small-btn{padding:8px 11px;font-size:12px}
+@media(max-width:650px){.grid,.metric-grid{grid-template-columns:1fr}.top{padding:18px 14px}.panel{padding:16px}.login{margin:25px auto}.brand h1{font-size:19px}.vehicle-actions{grid-template-columns:1fr}}
+</style>
+</head>
 <body>
-<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>FROTA 360</h1><div class="product">Gestão de Frota · Inspeção · Controle · Gestão</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
+<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>RECUPERAÇÃO DE CORTADOS</h1><div class="product">Águas do Rio · Inspeção · Controle de veículos</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
 <main class="wrap">
-<section id="loginView" class="panel login"><h2>Acessar o Frota 360</h2><p class="muted">Entre com seu e-mail e senha cadastrados.</p><form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div><button style="width:100%" type="submit">Entrar</button></form><div id="loginMsg" class="status hidden"></div></section>
+<section id="publicView" class="hidden"><div class="panel">
+<h2>Checklist diário de veículos</h2><p class="muted">Águas do Rio · Preencha todos os dados e verifique os nove itens do veículo.</p>
+<div id="publicMsg" class="status hidden"></div><form id="publicForm">
+<div class="grid">
+<div class="field"><label>Empresa</label><input value="Águas do Rio" readonly></div>
+<div class="field"><label>Equipe / Código da equipe *</label><input id="pubTeam" placeholder="Ex.: RIOSETCS-001" required></div>
+<div class="field"><label>Veículo / Placa *</label><input id="pubVehicle" placeholder="Digite a placa ou identificação" required></div>
+<div class="field"><label>Líder responsável *</label><input id="pubLeader" required></div>
+<div class="field"><label>Colaborador 1</label><input id="pubCollab1"></div>
+<div class="field"><label>Colaborador 2</label><input id="pubCollab2"></div>
+</div>
+<p class="muted">Data e horário do envio serão registrados automaticamente.</p><div id="publicChecklist"></div>
+<details class="additional-box" id="additionalIssuesBox"><summary>＋ Registrar problema adicional (fora do checklist)</summary>
+<p class="muted">Use esta área para defeitos não previstos nos nove itens, como ar-condicionado, limpador, bateria ou falhas mecânicas.</p>
+<div id="additionalIssuesList"></div>
+<button type="button" class="secondary" id="addIssueBtn">＋ Adicionar outro problema</button>
+</details>
+<button type="submit" id="publicSubmit">Enviar checklist</button>
+</form></div></section>
+
+<section id="loginView" class="panel login">
+<h2>Acessar o painel administrativo</h2><p class="muted">Entre com seu e-mail e senha cadastrados.</p>
+<form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div>
+<div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div>
+<button style="width:100%" type="submit">Entrar</button></form><div id="loginMsg" class="status hidden"></div>
+</section>
+
 <section id="appView" class="hidden">
-<div class="panel"><div class="bar"><div><h2 id="welcome">Bem-vindo</h2><div class="muted" id="roleText"></div></div><button class="secondary" id="logoutBtn">Sair</button></div><div id="appMsg" class="status hidden"></div></div>
-<div id="inspectorArea" class="panel hidden"><h2>Nova inspeção</h2><p class="muted">Preencha os dados do veículo e verifique cada item. Cada item permite anexar uma foto.</p>
-<form id="inspectionForm"><div class="grid"><div class="field"><label>Empresa</label><input id="company" value="Águas do Rio" required></div><div class="field"><label>Veículo</label><select id="vehicleSelect" required><option value="">Selecione o veículo</option></select></div><div class="field"><label>Líder responsável</label><input id="leader" required></div><div class="field"><label>Colaborador 1</label><input id="collab1"></div><div class="field"><label>Colaborador 2</label><input id="collab2"></div><div class="field"><label>Data da inspeção</label><input id="inspectionDate" type="date" required></div></div>
-<div id="checklist"></div><button type="submit" id="submitInspection">Enviar inspeção</button></form></div>
-<div id="adminArea" class="hidden">
-<div class="panel"><h2>Painel administrativo</h2><div class="muted">Registros de inspeção e não conformidades.</div><div class="tabs"><button class="active" data-tab="history">Histórico</button><button data-tab="vehicles">Veículos</button><button data-tab="users">Usuários</button></div>
-<div id="tab-history"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div><div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div></div>
-<div id="tab-vehicles" class="hidden"><h3>Cadastrar veículo</h3><form id="vehicleForm"><div class="grid"><div class="field"><label>Empresa</label><input id="vehicleCompany" value="Águas do Rio" required></div><div class="field"><label>Identificação do veículo (placa)</label><input id="plate" placeholder="Ex.: ABC1D23" required></div></div><button type="submit">Cadastrar veículo</button></form><div id="vehicleList" style="margin-top:15px"></div></div>
-<div id="tab-users" class="hidden"><h3>Cadastro de usuários</h3><p class="muted">Por segurança, a criação de contas será feita pelo administrador no painel de autenticação do Supabase nesta primeira versão. Não colocamos uma chave secreta no navegador.</p><ol class="muted"><li>No Supabase, abra Authentication → Users.</li><li>Clique em Add user e informe e-mail e senha.</li><li>O perfil será criado automaticamente como inspetor.</li><li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li></ol></div>
+<div class="panel"><div class="bar"><div><h2 id="welcome">Bem-vindo</h2><div class="muted" id="roleText">Acesso administrativo</div></div><button class="secondary" id="logoutBtn">Sair</button></div><div id="appMsg" class="status hidden"></div></div>
+<div id="adminArea" class="hidden"><div class="panel">
+<h2>Painel administrativo</h2><div class="muted">Acompanhamento da frota, histórico de inspeções e gestão de usuários.</div>
+<div class="tabs">
+<button class="active" data-tab="fleet">Situação da frota</button><button data-tab="history">Histórico</button><button data-tab="users">Usuários</button>
+</div>
+
+<div id="tab-fleet">
+<div class="bar"><strong>Resumo da frota</strong><button class="secondary" id="refreshFleet">Atualizar painel</button></div>
+<div class="metric-grid five" style="margin-top:12px">
+<div class="metric apto"><div class="muted">Total de veículos</div><div class="counter" id="countTotal">0</div></div>
+<div class="metric apto"><div class="muted">Aptos</div><div class="counter" id="countApto">0</div></div>
+<div class="metric oficina"><div class="muted">Na oficina</div><div class="counter" id="countOficina">0</div></div>
+<div class="metric"><div class="muted">Não aptos</div><div class="counter" id="countNaoApto">0</div></div>
+<div class="metric"><div class="muted">Na base</div><div class="counter" id="countBase">0</div></div>
+</div>
+<div class="record"><h3>Distribuição da frota</h3><div class="chart-row"><span>Aptos</span><div class="chart-track"><div id="barApto" class="chart-fill apto"></div></div><strong id="chartApto">0</strong></div>
+<div class="chart-row"><span>Na oficina</span><div class="chart-track"><div id="barOficina" class="chart-fill oficina"></div></div><strong id="chartOficina">0</strong></div><div class="muted" id="fleetTotal">Total: 0 veículos</div></div>
+
+<details class="registration-box"><summary>＋ Cadastrar veículo</summary><form id="vehicleForm">
+<div class="grid"><div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required></div>
+<div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div></div>
+<button type="submit" id="saveVehicleBtn">Cadastrar veículo</button></form></details>
+<div class="bar"><h3>Gestão de veículos</h3><span class="muted" id="vehicleCountLabel"></span></div>
+<div class="field fleet-search"><label>Buscar por placa ou líder</label><input id="fleetSearch" placeholder="Digite a placa ou nome do líder"></div>
+<div class="fleet-subtabs" id="fleetSubtabs">
+<button type="button" class="active" data-fleet-view="todos">Todos</button><button type="button" data-fleet-view="lideres">Equipes por líder</button><button type="button" data-fleet-view="gestao">Veículos da gestão</button><button type="button" data-fleet-view="oficina">Oficina</button><button type="button" data-fleet-view="aptos">Aptos</button><button type="button" data-fleet-view="naoaptos">Não aptos</button><button type="button" data-fleet-view="base">Na base</button>
+</div>
+<div id="vehiclesList" class="muted">Carregando veículos...</div>
+</div>
+
+<div id="tab-history" class="hidden"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div>
+<div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div><div id="historyDetail" class="hidden" style="margin-top:16px"></div></div>
+
+<div id="tab-users" class="hidden"><h3>Cadastro de usuários</h3>
+<p class="muted">Por segurança, a criação de contas é feita pelo administrador no painel de autenticação do Supabase. Não colocamos uma chave secreta no navegador.</p>
+<ol class="muted"><li>No Supabase, abra Authentication → Users.</li><li>Clique em Add user e informe e-mail e senha.</li><li>O perfil será criado automaticamente com a função padrão.</li><li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li></ol></div>
 </div></div>
-</section></main><div class="footer">Frota 360 · Águas do Rio</div>
+</section></main>
+<div class="footer">Águas do Rio · Recuperação de Cortados</div>
+<div id="photoViewer" class="photo-viewer hidden" role="dialog" aria-modal="true" aria-label="Visualização da foto"><button type="button" id="closePhotoViewer">Fechar ✕</button><img id="photoViewerImage" src="" alt="Foto ampliada"></div>
+
 <script>
 const SUPABASE_URL='https://aypdvilwkritqxwfwtjt.supabase.co';
 const SUPABASE_KEY='sb_publishable_zDxR_mdhlR_f_eJuesZyFw_ziI3Uzie';
+const FUNCTION_URL=SUPABASE_URL+'/functions/v1/hyper-endpoint';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const items=['Pneus','Faróis e lanternas','Retrovisores','Para-brisa e vidros','Limpeza e organização','Estepe','Macaco','Chave de roda','Triângulo'];
-let currentUser=null,currentProfile=null,vehicles=[];
+let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null;
 const $=id=>document.getElementById(id);
+const isPublicForm=new URLSearchParams(location.search).get('form')==='equipes';
+
 function message(id,text,type=''){const el=$(id);el.textContent=text;el.className='status '+type;el.classList.remove('hidden')}
 function hide(id){$(id).classList.add('hidden')}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function renderChecklist(){ $('checklist').innerHTML=items.map((name,i)=>`<div class="item" data-item="${i}"><h3>${name}</h3><div class="choices"><label><input type="radio" name="result${i}" value="Conforme" required> Conforme</label><label><input type="radio" name="result${i}" value="Não conforme" required> Não conforme</label></div><div class="field"><label>Observação (se necessário)</label><textarea id="obs${i}" placeholder="Descreva o problema, se houver"></textarea></div><div class="field"><label>Foto deste item</label><input id="photo${i}" type="file" accept="image/*" capture="environment"></div></div>`).join('')}
-async function loadVehicles(){const {data,error}=await db.from('vehicles').select('id,company,plate').order('plate');if(error){message('appMsg','Não foi possível carregar os veículos: '+error.message,'error');return}vehicles=data||[];$('vehicleSelect').innerHTML='<option value="">Selecione o veículo</option>'+vehicles.map(v=>`<option value="${v.id}">${escapeHtml(v.plate)} — ${escapeHtml(v.company)}</option>`).join('');$('vehicleList').innerHTML=vehicles.length?vehicles.map(v=>`<div class="record">${escapeHtml(v.plate)} — ${escapeHtml(v.company)}</div>`).join(''):'<p class="muted">Nenhum veículo cadastrado.</p>'}
-async function showApp(session){currentUser=session.user;const {data:profile,error}=await db.from('profiles').select('full_name,role').eq('id',currentUser.id).single()if(error||!profile){message('loginMsg','Erro ao localizar perfil: '+(error?.message||'Perfil não encontrado')+' | Código: '+(error?.code||'sem código')+' | Detalhes: '+(error?.details||''),'error');await db.auth.signOut();return}currentProfile=profile;hide('loginView');$('appView').classList.remove('hidden');$('userBadge').classList.remove('hidden');$('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>'+escapeHtml(profile.role);$('welcome').textContent='Olá, '+(profile.full_name||'usuário');$('roleText').textContent=profile.role==='admin'?'Acesso de administrador':'Acesso de inspetor';$('adminArea').classList.toggle('hidden',profile.role!=='admin');$('inspectorArea').classList.toggle('hidden',profile.role==='admin');$('inspectionDate').value=new Date().toISOString().slice(0,10);await loadVehicles();if(profile.role==='admin')await loadHistory()}
-async function loadHistory(){const box=$('historyList');box.textContent='Carregando...';const {data:rows,error}=await db.from('inspections').select('id,vehicle_id,created_by,leader,collaborator_1,collaborator_2,inspection_date,status,vehicles(plate,company),inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false});if(error){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(error.message)+'</div>';return}if(!rows?.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';for(const r of rows){const div=document.createElement('div');div.className='record';const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme');div.innerHTML=`<h3>${escapeHtml(r.vehicles?.plate||'Veículo')} · ${escapeHtml(r.inspection_date||'')}</h3><div class="muted">Empresa: ${escapeHtml(r.vehicles?.company||'')} · Líder: ${escapeHtml(r.leader||'')} · Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / '))}</div><p><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></p><div class="details"></div>`;const details=div.querySelector('.details');for(const it of r.inspection_items||[]){const line=document.createElement('p');line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;details.appendChild(line);if(it.photo_path){const {data:file}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);if(file?.signedUrl){const img=document.createElement('img');img.src=file.signedUrl;img.alt='Foto '+it.item_name;details.appendChild(img)}}}box.appendChild(div)}}
+function renderChecklist(target,prefix){$(target).innerHTML=items.map((name,i)=>`<div class="item"><h3>${i+1}. ${name}</h3><div class="choices"><label><input type="radio" name="${prefix}result${i}" value="Conforme" required> Conforme</label><label><input type="radio" name="${prefix}result${i}" value="Não conforme" required> Não conforme</label></div><div class="field"><label>Observação (se necessário)</label><textarea id="${prefix}obs${i}" placeholder="Descreva o problema, se houver"></textarea></div><div class="field"><label>Foto pela câmera (obrigatória)</label><input id="${prefix}photo${i}" type="file" accept="image/*" capture="environment"></div><div class="field"><label>Ou escolher foto da galeria</label><input id="${prefix}gallery${i}" type="file" accept="image/*"></div></div>`).join('')}
+
+/* PROBLEMAS ADICIONAIS FORA DO CHECKLIST */
+let additionalIssueCount=0;
+function addAdditionalIssue(){
+const index=additionalIssueCount++,wrap=document.createElement('div');wrap.className='issue-card';wrap.dataset.issue=index;
+wrap.innerHTML=`<div class="bar"><strong>Problema adicional</strong><button type="button" class="issue-remove" data-remove-issue="${index}">Remover</button></div>
+<div class="field"><label>Tipo de problema *</label><select id="issue-type-${index}" required>
+<option value="">Selecione</option><option>Ar-condicionado</option><option>Limpador de para-brisa</option><option>Bateria</option><option>Defeito mecânico</option><option>Problema elétrico</option><option>Freios</option><option>Suspensão</option><option>Motor</option><option>Outro</option></select></div>
+<div class="field"><label>Descreva o problema *</label><textarea id="issue-description-${index}" placeholder="Informe o defeito identificado" required></textarea></div>
+<div class="field"><label>Foto pela câmera</label><input class="issue-photo" id="issue-photo-${index}" type="file" accept="image/*" capture="environment"></div><div class="field"><label>Ou escolher foto da galeria</label><input class="issue-gallery" id="issue-gallery-${index}" type="file" accept="image/*"></div>`;
+$('additionalIssuesList').appendChild(wrap);
+}
+$('addIssueBtn').addEventListener('click',addAdditionalIssue);
+$('additionalIssuesList').addEventListener('click',e=>{const btn=e.target.closest('[data-remove-issue]');if(btn)btn.closest('.issue-card').remove()});
+
+/* FORMULÁRIO PÚBLICO */
+async function submitPublicForm(e){
+e.preventDefault();const btn=$('publicSubmit');btn.disabled=true;btn.textContent='Enviando checklist...';hide('publicMsg');
+try{
+const team=$('pubTeam').value.trim(),vehicle=$('pubVehicle').value.trim(),leader=$('pubLeader').value.trim(),checklist=[],additionalIssues=[],formData=new FormData();
+for(let i=0;i<items.length;i++){
+const result=document.querySelector(`input[name="pubresult${i}"]:checked`)?.value;if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');
+const observation=$('pubobs'+i).value.trim();checklist.push({item_name:items[i],result,observation:observation||null});
+const file=$('pubphoto'+i).files[0]||$('pubgallery'+i).files[0];if(!file)throw new Error('Anexe uma foto para o item obrigatório: '+items[i]+'.');if(!file.type.startsWith('image/'))throw new Error('O arquivo do item '+items[i]+' não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto do item '+items[i]+' ultrapassa 5 MB.');formData.append('photo_'+i,file);
+}
+let issuePhotoIndex=0;
+for(const card of $('additionalIssuesList').querySelectorAll('.issue-card')){
+const idx=card.dataset.issue,type=$('issue-type-'+idx).value,description=$('issue-description-'+idx).value.trim();
+if(!type||!description)throw new Error('Preencha o tipo e a descrição de todos os problemas adicionais ou remova os campos vazios.');
+const issue={issue_type:type,description};const file=$('issue-photo-'+idx).files[0]||$('issue-gallery-'+idx).files[0];
+if(file){if(!file.type.startsWith('image/'))throw new Error('O anexo do problema adicional não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto de um problema adicional ultrapassa 5 MB.');formData.append('additional_photo_'+issuePhotoIndex,file);issue.photo_index=issuePhotoIndex;}
+additionalIssues.push(issue);issuePhotoIndex++;
+}
+formData.append('team_name',team);formData.append('vehicle_label',vehicle);formData.append('leader',leader);formData.append('collaborator_1',$('pubCollab1').value.trim());formData.append('collaborator_2',$('pubCollab2').value.trim());formData.append('items',JSON.stringify(checklist));formData.append('additional_issues',JSON.stringify(additionalIssues));
+const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY},body:formData});const result=await response.json().catch(()=>({}));
+if(!response.ok)throw new Error(result.error||result.message||'Erro ao enviar. Código: '+response.status);
+message('publicMsg','Checklist enviado com sucesso! A equipe já consta como recebida no sistema.','success');$('publicForm').reset();$('additionalIssuesList').innerHTML='';$('additionalIssuesBox').open=false;additionalIssueCount=0;renderChecklist('publicChecklist','pub');
+}catch(err){message('publicMsg','Não foi possível enviar o checklist: '+err.message,'error')}
+finally{btn.disabled=false;btn.textContent='Enviar checklist'}
+}
+
+/* LOGIN — ACESSO SOMENTE ADMINISTRADOR */
+async function showApp(session){
+currentUser=session.user;const {data:profile,error}=await db.from('profiles').select('full_name,role').eq('id',currentUser.id).single();
+if(error||!profile){message('loginMsg','Não foi possível localizar seu perfil: '+(error?.message||'Perfil não encontrado'),'error');await db.auth.signOut();return}
+if(profile.role!=='admin'){message('loginMsg','Acesso restrito ao administrador.');await db.auth.signOut();return}
+currentProfile=profile;hide('loginView');$('appView').classList.remove('hidden');$('adminArea').classList.remove('hidden');$('userBadge').classList.remove('hidden');
+$('userBadge').innerHTML=escapeHtml(profile.full_name||currentUser.email)+'<br>Administrador';$('welcome').textContent='Olá, '+(profile.full_name||'administrador');$('roleText').textContent='Acesso de administrador';
+await Promise.all([loadHistory(),loadFleet()]);startFleetRealtime();
+}
+
+/* HISTÓRICO E FOTOS — MANTIDOS */
+async function getInspections(){const {data,error}=await db.from('inspections').select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false});if(error)throw error;const rows=data||[];if(!rows.length)return rows;const ids=rows.map(r=>r.id);const extra=await db.from('inspection_additional_issues').select('id,inspection_id,issue_type,description,photo_path,created_at').in('inspection_id',ids).order('created_at',{ascending:true});if(extra.error)throw extra.error;const byInspection={};for(const issue of extra.data||[]){(byInspection[issue.inspection_id] ||= []).push(issue)}for(const row of rows)row.additional_issues=byInspection[row.id]||[];return rows}
+function formatInspectionDate(value){if(!value)return'Data não informada';const date=new Date(value);return Number.isNaN(date.getTime())?String(value):date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+function openPhotoViewer(url,title){$('photoViewerImage').src=url;$('photoViewerImage').alt=title||'Foto ampliada';$('photoViewer').classList.remove('hidden')}
+function closePhotoViewer(){$('photoViewer').classList.add('hidden');$('photoViewerImage').src=''}
+async function renderInspectionRecord(r){
+const div=document.createElement('div');div.className='record';const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length;
+div.innerHTML=`<div class="bar"><div><h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3><div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div><div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div></div><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></div>`;
+for(const it of r.inspection_items||[]){const line=document.createElement('div');line.className='detail-item';line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
+if(it.photo_path){const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);if(!error&&file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.src=file.signedUrl;img.alt='Foto '+it.item_name;img.title='Clique para ampliar a foto';img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto '+it.item_name));line.appendChild(img)}else{const note=document.createElement('div');note.className='muted';note.textContent='Foto anexada, mas não foi possível abrir neste momento.';line.appendChild(note)}}div.appendChild(line)}
+if((r.additional_issues||[]).length){const heading=document.createElement('h3');heading.textContent='Problemas adicionais';div.appendChild(heading);for(const issue of r.additional_issues){const line=document.createElement('div');line.className='detail-item';line.innerHTML=`<strong>${escapeHtml(issue.issue_type||'Problema adicional')}</strong><div>${escapeHtml(issue.description||'Sem descrição')}</div><span class="pill bad">Não conforme</span>`;if(issue.photo_path){const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(issue.photo_path,3600);if(!error&&file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.src=file.signedUrl;img.alt='Foto do problema adicional';img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto do problema adicional'));line.appendChild(img)}}div.appendChild(line)}}
+return div}
+async function showHistoryDetails(inspectionId){
+const row=(window.frotaHistoryRows||[]).find(r=>r.id===inspectionId);if(!row)return;const detail=$('historyDetail');detail.classList.remove('hidden');
+detail.innerHTML=`<div class="detail-head"><div><h2>${escapeHtml(row.vehicle_label||'Veículo não informado')}</h2><div class="muted">${escapeHtml(row.team_name||'Equipe não informada')} · ${escapeHtml(formatInspectionDate(row.inspection_date))}</div></div><button class="secondary" id="backHistory">Voltar à lista</button></div><div id="historyDetailContent"></div>`;
+$('historyList').classList.add('hidden');$('backHistory').addEventListener('click',()=>{detail.classList.add('hidden');$('historyList').classList.remove('hidden');detail.innerHTML=''});
+$('historyDetailContent').appendChild(await renderInspectionRecord(row))}
+async function loadHistory(){
+const box=$('historyList'),detail=$('historyDetail');box.classList.remove('hidden');detail.classList.add('hidden');detail.innerHTML='';box.textContent='Carregando registros...';
+try{const rows=await getInspections();window.frotaHistoryRows=rows;if(!rows.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';
+for(const r of rows){const line=document.createElement('div');line.className='history-row';const info=document.createElement('div'),plate=document.createElement('button');plate.type='button';plate.className='plate-link';plate.textContent=r.vehicle_label||'Veículo não informado';plate.addEventListener('click',()=>showHistoryDetails(r.id));
+const meta=document.createElement('div');meta.className='history-meta';meta.textContent=(r.team_name||'Equipe não informada')+' · '+formatInspectionDate(r.inspection_date);const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length;info.append(plate,meta);
+const status=document.createElement('span');status.className='pill '+(bad?'bad':'good');status.textContent=bad?bad+' não conformidade(s)':'Concluída';line.append(info,status);box.appendChild(line)}
+}catch(err){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>'}
+}
+
+/* GESTÃO DE FROTA — agrupamentos, status e controle da oficina */
+const LEADERS=['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel'];
+const MANAGEMENT=['Supervisor Alamino','Supervisor Ivonildo','Coordenador Arthur'];
+let fleetView='todos',fleetSearch='';
+async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;vehiclesCache=data||[];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'. Confira se executou a atualização SQL fornecida junto com este arquivo.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
+function normStatus(v){return v.status||'Apto'}
+function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)'}
+function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLowerCase();const match=!q||String(v.plate||'').toLowerCase().includes(q)||String(v.leader_name||'').toLowerCase().includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina';if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return MANAGEMENT.includes(v.vehicle_group);if(fleetView==='lideres')return LEADERS.includes(v.leader_name)||!v.leader_name;return true})}
+function vehicleEditor(v){const card=document.createElement('div');card.className='vehicle-card';const status=normStatus(v);card.innerHTML=`<div class="bar"><div><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(v.leader_name||'Sem líder definido')}</div></div><span class="pill ${status==='Apto'?'good':status==='Não apto'?'bad':'pending'}">${escapeHtml(status)}</span></div><div class="grid"><div class="field"><label>Grupo / responsável</label><select id="group-${v.id}"><option value="">Selecione</option>${[...LEADERS,...MANAGEMENT].map(x=>`<option ${v.vehicle_group===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select></div><div class="field"><label>Líder</label><input id="leader-${v.id}" value="${escapeHtml(v.leader_name||'')}" placeholder="Nome do líder"></div><div class="field"><label>Situação</label><select id="status-${v.id}">${['Apto','Na oficina','Não apto','Na base'].map(x=>`<option ${status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Oficina</label><input id="workshop-${v.id}" value="${escapeHtml(v.workshop_name||'')}" placeholder="Nome da oficina"></div><div class="field"><label>Data de envio à oficina</label><input type="date" id="sent-${v.id}" value="${String(v.sent_to_workshop_at||'').slice(0,10)}"></div><div class="field"><label>Data de retirada</label><input type="date" id="returned-${v.id}" value="${String(v.workshop_return_at||'').slice(0,10)}"></div></div><div class="field"><label>Descrição da manutenção / motivo</label><textarea id="maintenance-${v.id}">${escapeHtml(v.maintenance_description||v.workshop_reason||'')}</textarea></div><div class="bar"><span class="muted">${v.status_updated_at?'Atualizado: '+escapeHtml(formatInspectionDate(v.status_updated_at)):'Sem atualização'}</span><button class="small-btn" type="button" data-save-vehicle="${v.id}">Salvar alterações</button></div>`;return card}
+function renderWorkshopTable(list){const wrap=document.createElement('div');wrap.className='fleet-table-wrap';const table=document.createElement('table');table.className='fleet-table';table.innerHTML='<thead><tr><th>VEÍCULO</th><th>OFICINA</th><th>DESCRIÇÃO DA MANUTENÇÃO</th><th>DATA DE ENVIO</th><th>RETIRADA OFICINA</th><th>LÍDER</th><th>SITUAÇÃO</th></tr></thead><tbody></tbody>';const body=table.querySelector('tbody');for(const v of list){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${escapeHtml(v.plate)}</strong></td><td>${escapeHtml(v.workshop_name||'Não informada')}</td><td>${escapeHtml(v.maintenance_description||v.workshop_reason||'—')}</td><td>${escapeHtml(v.sent_to_workshop_at||'—')}</td><td>${escapeHtml(v.workshop_return_at||'—')}</td><td>${escapeHtml(v.leader_name||'—')}</td><td>${escapeHtml(normStatus(v))}</td>`;body.appendChild(tr)}wrap.appendChild(table);return wrap}
+function renderVehicles(){const box=$('vehiclesList');box.innerHTML='';const list=filteredVehicles();if(!list.length){box.innerHTML='<p class="muted">Nenhum veículo encontrado nesta área.</p>';return}if(fleetView==='oficina'){box.appendChild(renderWorkshopTable(list));list.forEach(v=>box.appendChild(vehicleEditor(v)))}else if(fleetView==='lideres'||fleetView==='gestao'||fleetView==='todos'){const groups=fleetView==='gestao'?MANAGEMENT:fleetView==='lideres'?LEADERS:['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel',...MANAGEMENT,'Outros veículos'];for(const g of groups){const rows=list.filter(v=>g==='Outros veículos'?(!LEADERS.includes(v.leader_name)&&!MANAGEMENT.includes(v.vehicle_group)):fleetView==='gestao'?v.vehicle_group===g:fleetView==='lideres'?v.leader_name===g:v.vehicle_group===g||v.leader_name===g);if(!rows.length)continue;const details=document.createElement('details');details.className='fleet-group';details.open=false;details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s)</summary><div class="fleet-group-content"></div>`;const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details)}}else list.forEach(v=>box.appendChild(vehicleEditor(v)));box.querySelectorAll('[data-save-vehicle]').forEach(btn=>btn.addEventListener('click',()=>saveVehicleStatus(btn.dataset.saveVehicle)))}
+async function saveVehicleStatus(id){const v=vehiclesCache.find(x=>x.id===id);if(!v)return;const group=$('group-'+id).value,leader=$('leader-'+id).value.trim(),statusInput=$('status-'+id).value,workshop=$('workshop-'+id).value.trim(),sent=$('sent-'+id).value||null,returned=$('returned-'+id).value||null,description=$('maintenance-'+id).value.trim();let status=statusInput;if(sent&&!returned)status='Na oficina';else if(returned&&statusInput==='Na oficina')status='Apto';if(status==='Na oficina'&&!sent){message('appMsg','Informe a data de envio à oficina.','error');return}const payload={vehicle_group:group||null,leader_name:leader||null,status,workshop_name:workshop||null,maintenance_description:description||null,workshop_reason:description||null,sent_to_workshop_at:sent,workshop_return_at:returned,status_updated_at:new Date().toISOString()};const btn=document.querySelector(`[data-save-vehicle="${id}"]`);btn.disabled=true;try{const {error}=await db.from('vehicles').update(payload).eq('id',id);if(error)throw error;message('appMsg','Dados do veículo atualizados.','success');await loadFleet()}catch(err){message('appMsg','Não foi possível salvar: '+err.message,'error')}finally{btn.disabled=false}}
+async function registerVehicle(e){e.preventDefault();const btn=$('saveVehicleBtn'),plate=$('vehiclePlate').value.trim().toUpperCase(),company=$('vehicleCompany').value.trim()||'Águas do Rio';btn.disabled=true;btn.textContent='Cadastrando...';try{const {error}=await db.from('vehicles').insert({plate,company,status:'Apto',status_updated_at:new Date().toISOString()});if(error)throw error;$('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';message('appMsg','Veículo cadastrado como Apto.','success');await loadFleet()}catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}finally{btn.disabled=false;btn.textContent='Cadastrar veículo'}}
+function startFleetRealtime(){if(fleetChannel)db.removeChannel(fleetChannel);fleetChannel=db.channel('frota360-vehicles-live').on('postgres_changes',{event:'*',schema:'public',table:'vehicles'},()=>loadFleet()).subscribe()}
+
+/* EVENTOS */
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();hide('loginMsg');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){message('loginMsg','Não foi possível entrar: '+error.message,'error');return}await showApp(data.session)});
-$('logoutBtn').addEventListener('click',async()=>{await db.auth.signOut();location.reload()});
-$('inspectionForm').addEventListener('submit',async e=>{e.preventDefault();const btn=$('submitInspection');btn.disabled=true;btn.textContent='Enviando...';try{const payload={vehicle_id:$('vehicleSelect').value,created_by:currentUser.id,leader:$('leader').value.trim(),collaborator_1:$('collab1').value.trim()||null,collaborator_2:$('collab2').value.trim()||null,inspection_date:$('inspectionDate').value,status:'Concluída'};const {data:inspection,error}=await db.from('inspections').insert(payload).select('id').single();if(error)throw error;for(let i=0;i<items.length;i++){const result=document.querySelector(`input[name="result${i}"]:checked`)?.value;if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');let photo_path=null;const file=$('photo'+i).files[0];if(file){const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'');photo_path=`${currentUser.id}/${inspection.id}/${i}-${Date.now()}.${ext}`;const {error:upErr}=await db.storage.from('frota360-fotos').upload(photo_path,file,{upsert:false,contentType:file.type||'image/jpeg'});if(upErr)throw upErr}const {error:itemErr}=await db.from('inspection_items').insert({inspection_id:inspection.id,item_name:items[i],result,observation:$('obs'+i).value.trim()||null,photo_path});if(itemErr)throw itemErr}message('appMsg','Inspeção enviada com sucesso!','success');$('inspectionForm').reset();$('company').value='Águas do Rio';$('inspectionDate').value=new Date().toISOString().slice(0,10);renderChecklist();await loadVehicles()}catch(err){message('appMsg','Não foi possível concluir a inspeção: '+err.message,'error')}finally{btn.disabled=false;btn.textContent='Enviar inspeção'}});
-$('vehicleForm').addEventListener('submit',async e=>{e.preventDefault();const {error}=await db.from('vehicles').insert({company:$('vehicleCompany').value.trim(),plate:$('plate').value.trim().toUpperCase()});if(error){message('appMsg','Erro ao cadastrar veículo: '+error.message,'error');return}$('plate').value='';message('appMsg','Veículo cadastrado.','success');await loadVehicles()});
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['history','vehicles','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='vehicles')loadVehicles();if(b.dataset.tab==='history')loadHistory()}));$('refreshHistory').addEventListener('click',loadHistory);
-renderChecklist();db.auth.getSession().then(({data})=>{if(data.session)showApp(data.session)});
-</script></body></html>
+$('logoutBtn').addEventListener('click',async()=>{if(fleetChannel)await db.removeChannel(fleetChannel);await db.auth.signOut();location.reload()});
+$('publicForm').addEventListener('submit',submitPublicForm);$('refreshHistory').addEventListener('click',loadHistory);$('refreshFleet').addEventListener('click',loadFleet);$('vehicleForm').addEventListener('submit',registerVehicle);
+$('fleetSearch').addEventListener('input',e=>{fleetSearch=e.target.value;renderVehicles()});$('fleetSubtabs').addEventListener('click',e=>{const b=e.target.closest('[data-fleet-view]');if(!b)return;fleetView=b.dataset.fleetView;$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));renderVehicles()});$('closePhotoViewer').addEventListener('click',closePhotoViewer);$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer')closePhotoViewer()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer()});
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['fleet','history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='history')loadHistory();if(b.dataset.tab==='fleet')loadFleet()}));
+
+/* INICIALIZAÇÃO */
+if(isPublicForm){hide('loginView');$('publicView').classList.remove('hidden');renderChecklist('publicChecklist','pub')}
+else{hide('publicView');db.auth.getSession().then(({data})=>{if(data.session)showApp(data.session)})}
+</script>
+</body>
+</html>
