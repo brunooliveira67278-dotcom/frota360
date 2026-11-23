@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Águas do Rio – Recuperação de Cortados</title>
+<title>Frota 360 | Águas do Rio</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b;--orange:#a15c00}
@@ -55,6 +55,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 .issue-card .field{margin:8px 0}
 .issue-remove{background:#fff0ef;color:var(--red);padding:7px 10px;font-size:12px}
 .issue-photo{font-size:13px}
+.vehicle-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.vehicle-summary-main{min-width:0}.vehicle-summary-main h3{margin:0;color:var(--navy);font-size:16px}.vehicle-edit-fields{border-top:1px solid var(--line);margin-top:12px;padding-top:8px}.vehicle-edit-fields[hidden]{display:none!important}.vehicle-edit-toggle{white-space:nowrap}.fleet-group-content .vehicle-card{padding:12px 0}.vehicle-card .bar{gap:10px}
 .fleet-subtabs{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.fleet-subtabs button{background:#edf3f6;color:var(--navy);padding:9px 12px}.fleet-subtabs button.active{background:var(--navy);color:#fff}
 .fleet-search{max-width:360px}.fleet-group{border:1px solid var(--line);border-radius:12px;margin:12px 0;background:#fff}.fleet-group summary{padding:13px 15px;cursor:pointer;font-weight:700;color:var(--navy)}.fleet-group-content{padding:0 15px 12px}.fleet-table-wrap{overflow:auto}.fleet-table{width:100%;border-collapse:collapse;font-size:13px;min-width:850px}.fleet-table th,.fleet-table td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}.fleet-table th{background:#f5f8fa;color:#395466}.fleet-table input,.fleet-table select{max-width:180px;padding:7px;border:1px solid #cbd9e0;border-radius:7px}.metric-grid.five{grid-template-columns:repeat(5,minmax(0,1fr))}
 @media(max-width:800px){.metric-grid.five{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -63,7 +64,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 </style>
 </head>
 <body>
-<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>RECUPERAÇÃO DE CORTADOS</h1><div class="product">Águas do Rio · Inspeção · Controle de veículos</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
+<header class="top"><div class="brand"><div><small>ÁGUAS DO RIO</small><h1>FROTA 360</h1><div class="product">Gestão de Frota · Inspeção · Controle</div></div><div id="userBadge" class="hidden" style="text-align:right;font-size:13px"></div></div></header>
 <main class="wrap">
 <section id="publicView" class="hidden"><div class="panel">
 <h2>Checklist diário de veículos</h2><p class="muted">Águas do Rio · Preencha todos os dados e verifique os nove itens do veículo.</p>
@@ -112,7 +113,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 <div class="record"><h3>Distribuição da frota</h3><div class="chart-row"><span>Aptos</span><div class="chart-track"><div id="barApto" class="chart-fill apto"></div></div><strong id="chartApto">0</strong></div>
 <div class="chart-row"><span>Na oficina</span><div class="chart-track"><div id="barOficina" class="chart-fill oficina"></div></div><strong id="chartOficina">0</strong></div><div class="muted" id="fleetTotal">Total: 0 veículos</div></div>
 
-<details class="registration-box"><summary>＋ Cadastrar veículo</summary><form id="vehicleForm">
+<details class="registration-box" id="vehicleRegistration"><summary id="vehicleRegistrationSummary">＋ Cadastrar veículo</summary><form id="vehicleForm">
 <div class="grid"><div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required></div>
 <div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div></div>
 <button type="submit" id="saveVehicleBtn">Cadastrar veículo</button></form></details>
@@ -132,7 +133,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 <ol class="muted"><li>No Supabase, abra Authentication → Users.</li><li>Clique em Add user e informe e-mail e senha.</li><li>O perfil será criado automaticamente com a função padrão.</li><li>Para promover alguém a administrador, isso deverá ser feito por procedimento seguro no banco.</li></ol></div>
 </div></div>
 </section></main>
-<div class="footer">Águas do Rio · Recuperação de Cortados</div>
+<div class="footer">Frota 360 · Águas do Rio</div>
 <div id="photoViewer" class="photo-viewer hidden" role="dialog" aria-modal="true" aria-label="Visualização da foto"><button type="button" id="closePhotoViewer">Fechar ✕</button><img id="photoViewerImage" src="" alt="Foto ampliada"></div>
 
 <script>
@@ -226,19 +227,118 @@ const status=document.createElement('span');status.className='pill '+(bad?'bad':
 }catch(err){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>'}
 }
 
-/* GESTÃO DE FROTA — agrupamentos, status e controle da oficina */
+/* GESTÃO DE FROTA — listas compactas, edição sob demanda e controle da oficina */
 const LEADERS=['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel'];
 const MANAGEMENT=['Supervisor Alamino','Supervisor Ivonildo','Coordenador Arthur'];
+const MANAGEMENT_VEHICLES={
+ 'SII7G55':'Supervisor Alamino',
+ 'SIJ1G04':'Supervisor Ivonildo',
+ 'SEO5G39':'Coordenador Arthur'
+};
+// Veículos dos líderes que também devem aparecer na aba Gestão.
+const LEADER_MANAGEMENT_VEHICLES={
+ 'TEH6G73':'Rafael',
+ 'SIC1C19':'Maycon',
+ 'SIC0A83':'Marlon Generoso',
+ 'SII7G60':'Emerson',
+ 'TEJ6F81':'Ricardo',
+ 'TEH1G90':'Daniel'
+};
 let fleetView='todos',fleetSearch='';
+function plateKey(v){return String(v.plate||'').toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function managementOwner(v){
+ const key=plateKey(v);
+ const mapped=MANAGEMENT_VEHICLES[key]||LEADER_MANAGEMENT_VEHICLES[key];
+ if(mapped)return mapped;
+ if(MANAGEMENT.includes(v.vehicle_group))return v.vehicle_group;
+ if(v.vehicle_group==='Gestão'&&MANAGEMENT.includes(v.leader_name))return v.leader_name;
+ if(MANAGEMENT.includes(v.leader_name))return v.leader_name;
+ return null;
+}
+function isManagementVehicle(v){return !!managementOwner(v)||v.vehicle_group==='Gestão'}
 async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;vehiclesCache=data||[];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'. Confira se executou a atualização SQL fornecida junto com este arquivo.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
 function normStatus(v){return v.status||'Apto'}
 function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)'}
-function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLowerCase();const match=!q||String(v.plate||'').toLowerCase().includes(q)||String(v.leader_name||'').toLowerCase().includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina';if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return MANAGEMENT.includes(v.vehicle_group);if(fleetView==='lideres')return LEADERS.includes(v.leader_name)||!v.leader_name;return true})}
-function vehicleEditor(v){const card=document.createElement('div');card.className='vehicle-card';const status=normStatus(v);card.innerHTML=`<div class="bar"><div><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(v.leader_name||'Sem líder definido')}</div></div><span class="pill ${status==='Apto'?'good':status==='Não apto'?'bad':'pending'}">${escapeHtml(status)}</span></div><div class="grid"><div class="field"><label>Grupo / responsável</label><select id="group-${v.id}"><option value="">Selecione</option>${[...LEADERS,...MANAGEMENT].map(x=>`<option ${v.vehicle_group===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select></div><div class="field"><label>Líder</label><input id="leader-${v.id}" value="${escapeHtml(v.leader_name||'')}" placeholder="Nome do líder"></div><div class="field"><label>Situação</label><select id="status-${v.id}">${['Apto','Na oficina','Não apto','Na base'].map(x=>`<option ${status===x?'selected':''}>${x}</option>`).join('')}</select></div><div class="field"><label>Oficina</label><input id="workshop-${v.id}" value="${escapeHtml(v.workshop_name||'')}" placeholder="Nome da oficina"></div><div class="field"><label>Data de envio à oficina</label><input type="date" id="sent-${v.id}" value="${String(v.sent_to_workshop_at||'').slice(0,10)}"></div><div class="field"><label>Data de retirada</label><input type="date" id="returned-${v.id}" value="${String(v.workshop_return_at||'').slice(0,10)}"></div></div><div class="field"><label>Descrição da manutenção / motivo</label><textarea id="maintenance-${v.id}">${escapeHtml(v.maintenance_description||v.workshop_reason||'')}</textarea></div><div class="bar"><span class="muted">${v.status_updated_at?'Atualizado: '+escapeHtml(formatInspectionDate(v.status_updated_at)):'Sem atualização'}</span><button class="small-btn" type="button" data-save-vehicle="${v.id}">Salvar alterações</button></div>`;return card}
-function renderWorkshopTable(list){const wrap=document.createElement('div');wrap.className='fleet-table-wrap';const table=document.createElement('table');table.className='fleet-table';table.innerHTML='<thead><tr><th>VEÍCULO</th><th>OFICINA</th><th>DESCRIÇÃO DA MANUTENÇÃO</th><th>DATA DE ENVIO</th><th>RETIRADA OFICINA</th><th>LÍDER</th><th>SITUAÇÃO</th></tr></thead><tbody></tbody>';const body=table.querySelector('tbody');for(const v of list){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${escapeHtml(v.plate)}</strong></td><td>${escapeHtml(v.workshop_name||'Não informada')}</td><td>${escapeHtml(v.maintenance_description||v.workshop_reason||'—')}</td><td>${escapeHtml(v.sent_to_workshop_at||'—')}</td><td>${escapeHtml(v.workshop_return_at||'—')}</td><td>${escapeHtml(v.leader_name||'—')}</td><td>${escapeHtml(normStatus(v))}</td>`;body.appendChild(tr)}wrap.appendChild(table);return wrap}
-function renderVehicles(){const box=$('vehiclesList');box.innerHTML='';const list=filteredVehicles();if(!list.length){box.innerHTML='<p class="muted">Nenhum veículo encontrado nesta área.</p>';return}if(fleetView==='oficina'){box.appendChild(renderWorkshopTable(list));list.forEach(v=>box.appendChild(vehicleEditor(v)))}else if(fleetView==='lideres'||fleetView==='gestao'||fleetView==='todos'){const groups=fleetView==='gestao'?MANAGEMENT:fleetView==='lideres'?LEADERS:['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel',...MANAGEMENT,'Outros veículos'];for(const g of groups){const rows=list.filter(v=>g==='Outros veículos'?(!LEADERS.includes(v.leader_name)&&!MANAGEMENT.includes(v.vehicle_group)):fleetView==='gestao'?v.vehicle_group===g:fleetView==='lideres'?v.leader_name===g:v.vehicle_group===g||v.leader_name===g);if(!rows.length)continue;const details=document.createElement('details');details.className='fleet-group';details.open=false;details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s)</summary><div class="fleet-group-content"></div>`;const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details)}}else list.forEach(v=>box.appendChild(vehicleEditor(v)));box.querySelectorAll('[data-save-vehicle]').forEach(btn=>btn.addEventListener('click',()=>saveVehicleStatus(btn.dataset.saveVehicle)))}
-async function saveVehicleStatus(id){const v=vehiclesCache.find(x=>x.id===id);if(!v)return;const group=$('group-'+id).value,leader=$('leader-'+id).value.trim(),statusInput=$('status-'+id).value,workshop=$('workshop-'+id).value.trim(),sent=$('sent-'+id).value||null,returned=$('returned-'+id).value||null,description=$('maintenance-'+id).value.trim();let status=statusInput;if(sent&&!returned)status='Na oficina';else if(returned&&statusInput==='Na oficina')status='Apto';if(status==='Na oficina'&&!sent){message('appMsg','Informe a data de envio à oficina.','error');return}const payload={vehicle_group:group||null,leader_name:leader||null,status,workshop_name:workshop||null,maintenance_description:description||null,workshop_reason:description||null,sent_to_workshop_at:sent,workshop_return_at:returned,status_updated_at:new Date().toISOString()};const btn=document.querySelector(`[data-save-vehicle="${id}"]`);btn.disabled=true;try{const {error}=await db.from('vehicles').update(payload).eq('id',id);if(error)throw error;message('appMsg','Dados do veículo atualizados.','success');await loadFleet()}catch(err){message('appMsg','Não foi possível salvar: '+err.message,'error')}finally{btn.disabled=false}}
-async function registerVehicle(e){e.preventDefault();const btn=$('saveVehicleBtn'),plate=$('vehiclePlate').value.trim().toUpperCase(),company=$('vehicleCompany').value.trim()||'Águas do Rio';btn.disabled=true;btn.textContent='Cadastrando...';try{const {error}=await db.from('vehicles').insert({plate,company,status:'Apto',status_updated_at:new Date().toISOString()});if(error)throw error;$('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';message('appMsg','Veículo cadastrado como Apto.','success');await loadFleet()}catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}finally{btn.disabled=false;btn.textContent='Cadastrar veículo'}}
+function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLocaleLowerCase('pt-BR');const owner=managementOwner(v)||'';const match=!q||String(v.plate||'').toLocaleLowerCase('pt-BR').includes(q)||String(v.leader_name||'').toLocaleLowerCase('pt-BR').includes(q)||owner.toLocaleLowerCase('pt-BR').includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina';if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return isManagementVehicle(v);if(fleetView==='lideres')return LEADERS.includes(v.leader_name)||(!v.leader_name&&!isManagementVehicle(v));return true})}
+function vehicleEditor(v){
+ const card=document.createElement('div');card.className='vehicle-card';
+ const status=normStatus(v),owner=managementOwner(v),mapped=MANAGEMENT_VEHICLES[plateKey(v)]||LEADER_MANAGEMENT_VEHICLES[plateKey(v)];
+ const groupValue=MANAGEMENT.includes(v.vehicle_group)?v.vehicle_group:(v.vehicle_group==='Gestão'?(owner||'Gestão'):(mapped?'Gestão':(v.vehicle_group||'')));
+ const leaderValue=v.leader_name||mapped||'';
+ const statusClass=status==='Apto'?'good':status==='Não apto'?'bad':'pending';
+ card.innerHTML=`
+ <div class="vehicle-summary">
+  <div class="vehicle-summary-main"><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(owner||leaderValue||'Sem líder definido')}</div></div>
+  <div class="bar"><span class="pill ${statusClass}">${escapeHtml(status)}</span><button class="secondary small-btn vehicle-edit-toggle" type="button" data-toggle-edit="${v.id}">Editar</button></div>
+ </div>
+ <div class="vehicle-edit-fields" id="edit-fields-${v.id}" hidden>
+  <div class="grid">
+   <div class="field"><label>Grupo / classificação</label><select id="group-${v.id}"><option value="">Selecione</option><option value="Gestão" ${groupValue==='Gestão'||MANAGEMENT.includes(groupValue)?'selected':''}>Gestão</option>${[...LEADERS,...MANAGEMENT].map(x=>`<option value="${escapeHtml(x)}" ${groupValue===x?'selected':''}>${escapeHtml(x)}</option>`).join('')}</select></div>
+   <div class="field"><label>Líder / responsável</label><input id="leader-${v.id}" value="${escapeHtml(leaderValue)}" placeholder="Nome do líder ou responsável"></div>
+   <div class="field"><label>Situação</label><select id="status-${v.id}">${['Apto','Na oficina','Não apto','Na base'].map(x=>`<option value="${x}" ${status===x?'selected':''}>${x==='Na base'?'Ficou na base':x}</option>`).join('')}</select></div>
+   <div class="field"><label>Oficina</label><input id="workshop-${v.id}" value="${escapeHtml(v.workshop_name||'')}" placeholder="Nome da oficina"></div>
+   <div class="field"><label>Data de envio à oficina</label><input type="date" id="sent-${v.id}" value="${String(v.sent_to_workshop_at||'').slice(0,10)}"></div>
+   <div class="field"><label>Data de retirada</label><input type="date" id="returned-${v.id}" value="${String(v.workshop_return_at||'').slice(0,10)}"></div>
+  </div>
+  <div class="field"><label>Descrição da manutenção / motivo</label><textarea id="maintenance-${v.id}">${escapeHtml(v.maintenance_description||v.workshop_reason||'')}</textarea></div>
+  <div class="bar"><span class="muted">${v.status_updated_at?'Atualizado: '+escapeHtml(formatInspectionDate(v.status_updated_at)):'Sem atualização'}</span><button class="small-btn" type="button" data-save-vehicle="${v.id}">Salvar alterações</button></div>
+ </div>`;
+ return card;
+}
+function renderWorkshopTable(list){const wrap=document.createElement('div');wrap.className='fleet-table-wrap';const table=document.createElement('table');table.className='fleet-table';table.innerHTML='<thead><tr><th>VEÍCULO</th><th>OFICINA</th><th>DESCRIÇÃO DA MANUTENÇÃO</th><th>DATA DE ENVIO</th><th>RETIRADA OFICINA</th><th>LÍDER</th><th>SITUAÇÃO</th></tr></thead><tbody></tbody>';const body=table.querySelector('tbody');for(const v of list){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${escapeHtml(v.plate)}</strong></td><td>${escapeHtml(v.workshop_name||'Não informada')}</td><td>${escapeHtml(v.maintenance_description||v.workshop_reason||'—')}</td><td>${escapeHtml(v.sent_to_workshop_at||'—')}</td><td>${escapeHtml(v.workshop_return_at||'—')}</td><td>${escapeHtml(v.leader_name||managementOwner(v)||'—')}</td><td>${escapeHtml(normStatus(v))}</td>`;body.appendChild(tr)}wrap.appendChild(table);return wrap}
+function renderVehicles(){
+ const box=$('vehiclesList');box.innerHTML='';
+ const list=filteredVehicles();
+ const regSummary=$('vehicleRegistrationSummary'),regButton=$('saveVehicleBtn');
+ if(fleetView==='naoaptos'){regSummary.textContent='＋ Cadastrar veículo não apto';regButton.textContent='Cadastrar como Não apto'}
+ else{regSummary.textContent='＋ Cadastrar veículo';regButton.textContent='Cadastrar veículo'}
+ if(!list.length){box.innerHTML='<p class="muted">Nenhum veículo encontrado nesta área.</p>';return}
+ if(fleetView==='oficina')box.appendChild(renderWorkshopTable(list));
+ if(fleetView==='lideres'||fleetView==='gestao'||fleetView==='todos'){
+  const groups=fleetView==='gestao'?[...MANAGEMENT,...LEADERS]:fleetView==='lideres'?LEADERS:['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel',...MANAGEMENT,'Outros veículos'];
+  for(const g of groups){
+   const rows=list.filter(v=>{
+    if(g==='Outros veículos')return !LEADERS.includes(v.leader_name)&&!isManagementVehicle(v);
+    if(fleetView==='gestao')return managementOwner(v)===g;
+    if(fleetView==='lideres')return v.leader_name===g;
+    return managementOwner(v)===g||v.vehicle_group===g||v.leader_name===g;
+   });
+   if(!rows.length)continue;
+   const details=document.createElement('details');details.className='fleet-group';details.open=false;
+   details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s)</summary><div class="fleet-group-content"></div>`;
+   const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details);
+  }
+ }else list.forEach(v=>box.appendChild(vehicleEditor(v)));
+ box.querySelectorAll('[data-toggle-edit]').forEach(btn=>btn.addEventListener('click',()=>{
+  const fields=$('edit-fields-'+btn.dataset.toggleEdit);const opening=fields.hidden;fields.hidden=!opening;btn.textContent=opening?'Fechar':'Editar';
+ }));
+ box.querySelectorAll('[data-save-vehicle]').forEach(btn=>btn.addEventListener('click',()=>saveVehicleStatus(btn.dataset.saveVehicle)));
+ box.querySelectorAll('[id^="returned-"]').forEach(input=>input.addEventListener('change',()=>{
+  const id=input.id.replace('returned-','');const status=$('status-'+id);
+  if(input.value&&status.value==='Na oficina')status.value='Apto';
+ }));
+}
+async function saveVehicleStatus(id){
+ const v=vehiclesCache.find(x=>x.id===id);if(!v)return;
+ const group=$('group-'+id).value,leader=$('leader-'+id).value.trim(),statusInput=$('status-'+id).value,workshop=$('workshop-'+id).value.trim(),sent=$('sent-'+id).value||null,returned=$('returned-'+id).value||null,description=$('maintenance-'+id).value.trim();
+ let status=statusInput;
+ if(returned&&statusInput==='Na oficina')status='Apto';
+ else if(sent&&!returned&&statusInput==='Apto')status='Na oficina';
+ if(status==='Na oficina'&&!sent){message('appMsg','Informe a data de envio à oficina.','error');return}
+ const payload={vehicle_group:group||null,leader_name:leader||null,status,workshop_name:workshop||null,maintenance_description:description||null,workshop_reason:description||null,sent_to_workshop_at:sent,workshop_return_at:returned,status_updated_at:new Date().toISOString()};
+ const btn=document.querySelector(`[data-save-vehicle="${id}"]`);btn.disabled=true;
+ try{const {error}=await db.from('vehicles').update(payload).eq('id',id);if(error)throw error;message('appMsg','Dados do veículo atualizados.','success');await loadFleet()}
+ catch(err){message('appMsg','Não foi possível salvar: '+err.message,'error')}
+ finally{btn.disabled=false}
+}
+async function registerVehicle(e){
+ e.preventDefault();const btn=$('saveVehicleBtn'),plate=$('vehiclePlate').value.trim().toUpperCase(),company=$('vehicleCompany').value.trim()||'Águas do Rio';
+ const initialStatus=fleetView==='naoaptos'?'Não apto':'Apto';
+ btn.disabled=true;btn.textContent='Cadastrando...';
+ try{const {error}=await db.from('vehicles').insert({plate,company,status:initialStatus,status_updated_at:new Date().toISOString()});if(error)throw error;$('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';message('appMsg',initialStatus==='Não apto'?'Veículo cadastrado como Não apto.':'Veículo cadastrado como Apto.','success');await loadFleet();if(initialStatus==='Não apto'){$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.fleetView==='naoaptos'));fleetView='naoaptos';renderVehicles()}}
+ catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}
+ finally{btn.disabled=false;btn.textContent=fleetView==='naoaptos'?'Cadastrar como Não apto':'Cadastrar veículo'}
+}
 function startFleetRealtime(){if(fleetChannel)db.removeChannel(fleetChannel);fleetChannel=db.channel('frota360-vehicles-live').on('postgres_changes',{event:'*',schema:'public',table:'vehicles'},()=>loadFleet()).subscribe()}
 
 /* EVENTOS */
