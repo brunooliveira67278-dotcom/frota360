@@ -154,7 +154,7 @@ const SUPABASE_KEY='sb_publishable_zDxR_mdhlR_f_eJuesZyFw_ziI3Uzie';
 const FUNCTION_URL=SUPABASE_URL+'/functions/v1/hyper-endpoint';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const items=['Pneus','Faróis e lanternas','Retrovisores','Para-brisa e vidros','Limpeza e organização','Estepe','Macaco','Chave de roda','Triângulo'];
-let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null,inspectionsCache=[],dashboardPeriod="month";
+let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null,inspectionsCache=[],baseEventsCache=[],dashboardPeriod="month";
 const $=id=>document.getElementById(id);
 const isPublicForm=new URLSearchParams(location.search).get('form')==='equipes';
 
@@ -162,6 +162,33 @@ function message(id,text,type=''){const el=$(id);el.textContent=text;el.classNam
 function hide(id){$(id).classList.add('hidden')}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function renderChecklist(target,prefix){$(target).innerHTML=items.map((name,i)=>`<div class="item"><h3>${i+1}. ${name}</h3><div class="choices"><label><input type="radio" name="${prefix}result${i}" value="Conforme" required> Conforme</label><label><input type="radio" name="${prefix}result${i}" value="Não conforme" required> Não conforme</label></div><div class="field"><label>Observação (se necessário)</label><textarea id="${prefix}obs${i}" placeholder="Descreva o problema, se houver"></textarea></div><div class="field"><label>Foto pela câmera (obrigatória)</label><input id="${prefix}photo${i}" type="file" accept="image/*" capture="environment"></div><div class="field"><label>Ou escolher foto da galeria</label><input id="${prefix}gallery${i}" type="file" accept="image/*"></div></div>`).join('')}
+
+/* OTIMIZAÇÃO AUTOMÁTICA DAS FOTOS DO FORMULÁRIO */
+async function compressInspectionPhoto(file){
+ if(!file||!file.type.startsWith('image/'))throw new Error('Selecione uma foto em formato de imagem (JPG, PNG ou WebP).');
+ if(file.size>20*1024*1024)throw new Error('A foto original ultrapassa 20 MB. Reduza o arquivo ou tire uma nova foto.');
+ let source=null,bitmap=null;
+ try{
+  if('createImageBitmap' in window){bitmap=await createImageBitmap(file);source=bitmap;}
+  else {source=await new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{URL.revokeObjectURL(url);resolve(img)};img.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('O celular não conseguiu abrir esta foto. Tente enviar em JPG.'))};img.src=url;});}
+  const maxSide=1400,scale=Math.min(1,maxSide/Math.max(source.width,source.height));
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(source.width*scale));canvas.height=Math.max(1,Math.round(source.height*scale));
+  const ctx=canvas.getContext('2d',{alpha:false});if(!ctx)throw new Error('Não foi possível preparar a foto neste aparelho.');
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(source,0,0,canvas.width,canvas.height);
+  let quality=.78,blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));
+  while(blob&&blob.size>450*1024&&quality>.48){quality-=.06;blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));}
+  if(!blob)throw new Error('Não foi possível converter a foto. Tente outra imagem em JPG.');
+  if(blob.size>550*1024){
+   const smaller=document.createElement('canvas');smaller.width=Math.round(canvas.width*.78);smaller.height=Math.round(canvas.height*.78);
+   smaller.getContext('2d',{alpha:false}).drawImage(canvas,0,0,smaller.width,smaller.height);
+   blob=await new Promise(resolve=>smaller.toBlob(resolve,'image/jpeg',.56));
+  }
+  if(!blob)throw new Error('Não foi possível otimizar a foto.');
+  const base=(file.name||'foto').replace(/\.[^.]+$/,'').replace(/[^a-zA-Z0-9_-]/g,'_');
+  return new File([blob],base+'_otimizada.jpg',{type:'image/jpeg',lastModified:Date.now()});
+ }catch(err){if(err instanceof Error)throw err;throw new Error('Falha ao processar a foto. Tente enviar uma imagem JPG.');}
+ finally{if(bitmap&&bitmap.close)bitmap.close();}
+}
 
 /* PROBLEMAS ADICIONAIS FORA DO CHECKLIST */
 let additionalIssueCount=0;
@@ -179,24 +206,24 @@ $('additionalIssuesList').addEventListener('click',e=>{const btn=e.target.closes
 
 /* FORMULÁRIO PÚBLICO */
 async function submitPublicForm(e){
-e.preventDefault();const btn=$('publicSubmit');btn.disabled=true;btn.textContent='Enviando checklist...';hide('publicMsg');
+e.preventDefault();const btn=$('publicSubmit');btn.disabled=true;btn.textContent='Preparando fotos...';hide('publicMsg');
 try{
 const team=$('pubTeam').value.trim(),vehicle=$('pubVehicle').value.trim(),leader=$('pubLeader').value.trim(),checklist=[],additionalIssues=[],formData=new FormData();
 for(let i=0;i<items.length;i++){
 const result=document.querySelector(`input[name="pubresult${i}"]:checked`)?.value;if(!result)throw new Error('Selecione Conforme ou Não conforme em todos os itens.');
 const observation=$('pubobs'+i).value.trim();checklist.push({item_name:items[i],result,observation:observation||null});
-const file=$('pubphoto'+i).files[0]||$('pubgallery'+i).files[0];if(!file)throw new Error('Anexe uma foto para o item obrigatório: '+items[i]+'.');if(!file.type.startsWith('image/'))throw new Error('O arquivo do item '+items[i]+' não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto do item '+items[i]+' ultrapassa 5 MB.');formData.append('photo_'+i,file);
+const file=$('pubphoto'+i).files[0]||$('pubgallery'+i).files[0];if(!file)throw new Error('Anexe uma foto para o item obrigatório: '+items[i]+'.');message('publicMsg','Otimizando foto '+(i+1)+' de '+items.length+' ('+items[i]+')...');const optimized=await compressInspectionPhoto(file);formData.append('photo_'+i,optimized,optimized.name);
 }
 let issuePhotoIndex=0;
 for(const card of $('additionalIssuesList').querySelectorAll('.issue-card')){
 const idx=card.dataset.issue,type=$('issue-type-'+idx).value,description=$('issue-description-'+idx).value.trim();
 if(!type||!description)throw new Error('Preencha o tipo e a descrição de todos os problemas adicionais ou remova os campos vazios.');
 const issue={issue_type:type,description};const file=$('issue-photo-'+idx).files[0]||$('issue-gallery-'+idx).files[0];
-if(file){if(!file.type.startsWith('image/'))throw new Error('O anexo do problema adicional não é uma imagem.');if(file.size>5*1024*1024)throw new Error('A foto de um problema adicional ultrapassa 5 MB.');formData.append('additional_photo_'+issuePhotoIndex,file);issue.photo_index=issuePhotoIndex;}
+if(file){message('publicMsg','Otimizando foto do problema adicional...');const optimized=await compressInspectionPhoto(file);formData.append('additional_photo_'+issuePhotoIndex,optimized,optimized.name);issue.photo_index=issuePhotoIndex;}
 additionalIssues.push(issue);issuePhotoIndex++;
 }
 formData.append('team_name',team);formData.append('vehicle_label',vehicle);formData.append('leader',leader);formData.append('collaborator_1',$('pubCollab1').value.trim());formData.append('collaborator_2',$('pubCollab2').value.trim());formData.append('items',JSON.stringify(checklist));formData.append('additional_issues',JSON.stringify(additionalIssues));
-const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY},body:formData});const result=await response.json().catch(()=>({}));
+btn.textContent='Enviando checklist...';message('publicMsg','Fotos preparadas. Enviando checklist com segurança...');const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'apikey':SUPABASE_KEY},body:formData});const result=await response.json().catch(()=>({}));
 if(!response.ok)throw new Error(result.error||result.message||'Erro ao enviar. Código: '+response.status);
 message('publicMsg','Checklist enviado com sucesso! A equipe já consta como recebida no sistema.','success');$('publicForm').reset();$('additionalIssuesList').innerHTML='';$('additionalIssuesBox').open=false;additionalIssueCount=0;renderChecklist('publicChecklist','pub');
 }catch(err){message('publicMsg','Não foi possível enviar o checklist: '+err.message,'error')}
@@ -278,7 +305,7 @@ function managementOwner(v){
  return null;
 }
 function isManagementVehicle(v){const owner=managementOwner(v);return MANAGEMENT.includes(owner)||(v.vehicle_group==='Gestão'&&!LEADERS.includes(owner||''))}
-async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;const unique=new Map();for(const row of (data||[])){const key=plateNorm(row.plate)||('id:'+row.id);const old=unique.get(key);if(!old||new Date(row.status_updated_at||0)>=new Date(old.status_updated_at||0))unique.set(key,row)}vehiclesCache=[...unique.values()];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'. Confira se executou a atualização SQL fornecida junto com este arquivo.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
+async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;const unique=new Map();for(const row of (data||[])){const key=plateNorm(row.plate)||('id:'+row.id);const old=unique.get(key);if(!old||new Date(row.status_updated_at||0)>=new Date(old.status_updated_at||0))unique.set(key,row)}vehiclesCache=[...unique.values()];const ev=await db.from('vehicle_base_events').select('id,vehicle_id,plate,event_type,event_at,previous_status').order('event_at',{ascending:false});if(ev.error)throw new Error('Histórico da base não configurado: '+ev.error.message+'. Execute o SQL de atualização enviado junto com o Index.');baseEventsCache=ev.data||[];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
 function normStatus(v){return v.status||'Apto'}
 function inspectionBadCount(r){return (r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length}
 function plateNorm(value){return String(value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'')}
@@ -291,7 +318,7 @@ function renderInspectionDashboard(){
  const latestByPlate={};for(const r of inspectionsCache){const key=plateNorm(r.vehicle_label);if(!key)continue;if(!latestByPlate[key]||new Date(r.inspection_date)>new Date(latestByPlate[key].inspection_date))latestByPlate[key]=r}
  const alerts=Object.values(latestByPlate).filter(r=>inspectionBadCount(r)>0).sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date)).slice(0,6);
  $('dashAlerts').innerHTML=alerts.length?alerts.map(r=>`<div class="history-row"><div><strong>${escapeHtml(r.vehicle_label||'Sem placa')}</strong><div class="history-meta">${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.leader||'Líder não informado')}</div></div><span class="pill bad">${inspectionBadCount(r)} problema(s)</span></div>`).join(''):'<span class="muted">Nenhum veículo com não conformidade registrada.</span>';
- const months=[];const now=new Date();for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}),count:0})}for(const r of inspectionsCache){const d=new Date(r.inspection_date);if(Number.isNaN(d.getTime()))continue;const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===key);if(m)m.count++}const max=Math.max(1,...months.map(x=>x.count));$('dashTrend').innerHTML=months.map(m=>`<div class="chart-row"><span>${escapeHtml(m.label)}</span><div class="chart-track"><div class="chart-fill apto" style="width:${m.count/max*100}%"></div></div><strong>${m.count}</strong></div>`).join('');
+ const months=[];const now=new Date();for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}),count:0,base:0})}for(const r of inspectionsCache){const d=new Date(r.inspection_date);if(Number.isNaN(d.getTime()))continue;const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===key);if(m)m.count++}for(const e of baseEventsCache){if(e.event_type!=='entrada')continue;const d=new Date(e.event_at);if(Number.isNaN(d.getTime()))continue;const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===key);if(m)m.base++}const max=Math.max(1,...months.map(x=>Math.max(x.count,x.base)));$('dashTrend').innerHTML=months.map(m=>`<div class="chart-row"><span>${escapeHtml(m.label)}</span><div><div class="muted" style="font-size:11px">Inspeções: ${m.count}</div><div class="chart-track"><div class="chart-fill apto" style="width:${m.count/max*100}%"></div></div><div class="muted" style="font-size:11px">Entradas na base: ${m.base}</div><div class="chart-track"><div class="chart-fill base" style="width:${m.base/max*100}%"></div></div></div></div>`).join('');
 }
 
 function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('chartNaoApto').textContent=nao;$('chartBase').textContent=base;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('barNaoApto').style.width=(total?nao/total*100:0)+'%';$('barBase').style.width=(total?base/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)';renderInspectionDashboard()}
@@ -324,28 +351,31 @@ function vehicleEditor(v){
 }
 function renderWorkshopTable(list){const wrap=document.createElement('div');wrap.className='fleet-table-wrap';const table=document.createElement('table');table.className='fleet-table';table.innerHTML='<thead><tr><th>VEÍCULO</th><th>OFICINA</th><th>DESCRIÇÃO DA MANUTENÇÃO</th><th>DATA DE ENVIO</th><th>RETIRADA OFICINA</th><th>LÍDER</th><th>SITUAÇÃO</th></tr></thead><tbody></tbody>';const body=table.querySelector('tbody');for(const v of list){const tr=document.createElement('tr');tr.innerHTML=`<td><strong>${escapeHtml(v.plate)}</strong></td><td>${escapeHtml(v.workshop_name||'Não informada')}</td><td>${escapeHtml(v.maintenance_description||v.workshop_reason||'—')}</td><td>${escapeHtml(v.sent_to_workshop_at||'—')}</td><td>${escapeHtml(v.workshop_return_at||'—')}</td><td>${escapeHtml(v.leader_name||managementOwner(v)||'—')}</td><td>${escapeHtml(normStatus(v))}</td>`;body.appendChild(tr)}wrap.appendChild(table);return wrap}
 async function registerBaseVehicle(){
- const input=$('baseVehiclePlate');
- const plate=(input?.value||'').trim().toUpperCase();
+ const input=$('baseVehiclePlate');const plate=(input?.value||'').trim().toUpperCase();
  if(!plate){message('appMsg','Informe a placa ou identificação do veículo.','error');input?.focus();return}
- const key=plateNorm(plate);
- const existing=vehiclesCache.find(v=>plateNorm(v.plate)===key);
- const btn=$('registerBaseVehicleBtn');
- if(btn){btn.disabled=true;btn.textContent='Salvando...'}
+ const key=plateNorm(plate);let existing=vehiclesCache.find(v=>plateNorm(v.plate)===key);const btn=$('registerBaseVehicleBtn');if(btn){btn.disabled=true;btn.textContent='Salvando...'}
  try{
-  if(existing){
-   const {error}=await db.from('vehicles').update({status:'Na base',status_updated_at:new Date().toISOString()}).eq('id',existing.id);
-   if(error)throw error;
-   message('appMsg','Veículo '+plate+' registrado na base hoje.','success');
-  }else{
-   const {error}=await db.from('vehicles').insert({plate,company:'Águas do Rio',status:'Na base',status_updated_at:new Date().toISOString()});
-   if(error)throw error;
-   message('appMsg','Veículo '+plate+' cadastrado e registrado na base hoje.','success');
-  }
-  await loadFleet();
-  const refreshed=$('baseVehiclePlate');if(refreshed)refreshed.value='';
+  if(existing&&normStatus(existing)==='Na base'){message('appMsg','Este veículo já está registrado como Na base.','error');return}
+  const previousStatus=existing?normStatus(existing):'Apto';
+  if(existing){const {error}=await db.from('vehicles').update({status:'Na base',status_updated_at:new Date().toISOString()}).eq('id',existing.id);if(error)throw error}
+  else{const {data,error}=await db.from('vehicles').insert({plate,company:'Águas do Rio',status:'Na base',status_updated_at:new Date().toISOString()}).select('id').single();if(error)throw error;existing={id:data.id,plate,status:'Na base'};}
+  const {error:eventError}=await db.from('vehicle_base_events').insert({vehicle_id:existing.id,plate,event_type:'entrada',previous_status:previousStatus,event_at:new Date().toISOString()});if(eventError)throw eventError;
+  message('appMsg','Entrada de '+plate+' registrada. Ela continuará no gráfico mensal mesmo após a retirada da lista.','success');await loadFleet();const refreshed=$('baseVehiclePlate');if(refreshed)refreshed.value='';
  }catch(err){message('appMsg','Não foi possível registrar o veículo na base: '+err.message,'error')}
  finally{const current=$('registerBaseVehicleBtn');if(current){current.disabled=false;current.textContent='Registrar veículo na base'}}
 }
+async function removeBaseVehicle(id){
+ const v=vehiclesCache.find(x=>String(x.id)===String(id));if(!v)return;
+ if(!confirm('Retirar '+v.plate+' da lista “Na base”? O registro de entrada será mantido no gráfico mensal.'))return;
+ try{
+  const latest=baseEventsCache.find(e=>plateNorm(e.plate)===plateNorm(v.plate));
+  if(!latest||latest.event_type!=='entrada')throw new Error('Não foi encontrada uma entrada ativa para esta placa. Atualize a página e tente novamente.');
+  const {error:evError}=await db.from('vehicle_base_events').insert({vehicle_id:v.id,plate:v.plate,event_type:'saida',previous_status:latest.previous_status||'Apto',event_at:new Date().toISOString()});if(evError)throw evError;
+  const restoreStatus=latest.previous_status||'Apto';const {error}=await db.from('vehicles').update({status:restoreStatus,status_updated_at:new Date().toISOString()}).eq('id',v.id);if(error)throw error;
+  message('appMsg','Veículo '+v.plate+' retirado da lista. A entrada histórica foi preservada no gráfico mensal.','success');await loadFleet();
+ }catch(err){message('appMsg','Não foi possível retirar o veículo: '+err.message,'error')}
+}
+
 function renderVehicles(){
  const box=$('vehiclesList');box.innerHTML='';
  const list=filteredVehicles();
@@ -375,7 +405,8 @@ function renderVehicles(){
    const counts={apto:rows.filter(v=>normStatus(v)==='Apto').length,oficina:rows.filter(v=>normStatus(v)==='Na oficina').length,nao:rows.filter(v=>normStatus(v)==='Não apto').length,base:rows.filter(v=>normStatus(v)==='Na base').length};details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s) <span class="muted">| Aptos: ${counts.apto} · Oficina: ${counts.oficina} · Não aptos: ${counts.nao} · Base: ${counts.base}</span></summary><div class="fleet-group-content"></div>`;
    const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details);
   }
- }else list.forEach(v=>box.appendChild(vehicleEditor(v)));
+ }else list.forEach(v=>{const card=vehicleEditor(v);if(fleetView==='base'){const action=document.createElement('div');action.className='bar';action.style.marginTop='10px';action.innerHTML=`<button type="button" class="small-btn secondary" data-remove-base="${v.id}">Retirar da lista (manter histórico)</button>`;card.appendChild(action)}box.appendChild(card)});
+ box.querySelectorAll('[data-remove-base]').forEach(btn=>btn.addEventListener('click',()=>removeBaseVehicle(btn.dataset.removeBase)));
  box.querySelectorAll('[data-toggle-edit]').forEach(btn=>btn.addEventListener('click',()=>{
   const fields=$('edit-fields-'+btn.dataset.toggleEdit);const opening=fields.hidden;fields.hidden=!opening;btn.textContent=opening?'Fechar':'Editar';
  }));
