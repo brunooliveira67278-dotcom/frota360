@@ -29,7 +29,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 .plate-link{background:transparent;color:var(--navy);padding:4px 0;font-size:17px;font-weight:800;text-align:left}.plate-link:hover{text-decoration:underline;color:var(--blue)}
 .history-meta{font-size:13px;color:var(--muted);margin-top:4px}.detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .detail-item{padding:15px 0;border-bottom:1px solid var(--line)}.detail-item:last-child{border-bottom:0}
-.photo-full{display:block;width:100%;max-width:560px;height:260px;max-height:42vw;min-height:190px;object-fit:contain;object-position:left center;background:#f2f6f8;border:1px solid var(--line);border-radius:10px;margin:12px 0;cursor:zoom-in}.base-photo-caption{font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:10px}
+.photo-full{display:block;width:100%;max-width:100%;height:280px;max-height:none;min-height:220px;object-fit:contain;object-position:center center;background:#f2f6f8;border:1px solid var(--line);border-radius:10px;margin:12px 0;cursor:zoom-in}.base-photo-caption{font-size:12px;color:var(--muted);margin-top:-6px;margin-bottom:10px}
 .photo-viewer{position:fixed;inset:0;background:rgba(4,20,31,.94);z-index:9999;display:flex;align-items:center;justify-content:center;padding:55px 18px 20px}
 .photo-viewer img{max-width:100%;max-height:100%;object-fit:contain}.photo-viewer button{position:absolute;top:14px;right:16px;background:white;color:var(--navy)}
 .metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.metric{border:1px solid var(--line);border-radius:12px;padding:17px;background:#fbfdfe}
@@ -333,8 +333,8 @@ function buildDurationRanking(kind){
 }
 function showDurationRanking(kind){const rows=buildDurationRanking(kind),box=$('statusDurationRanking'),label=kind==='base'?'Na base':'Oficina';box.innerHTML='<h4>Veículos com maior permanência — '+label+'</h4>'+(rows.length?rows.map((r,i)=>'<div class="history-row"><div><strong>'+(i+1)+'. '+escapeHtml(r.plate)+'</strong><div class="history-meta">'+(r.active?'Permanência atual':'Permanência acumulada')+'</div></div><span class="pill">'+durationLabel(r.total)+'</span></div>').join(''):'<p class="muted">Ainda não há histórico suficiente para montar este ranking.</p>')}
 function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('chartNaoApto').textContent=nao;$('chartBase').textContent=base;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('barNaoApto').style.width=(total?nao/total*100:0)+'%';$('barBase').style.width=(total?base/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)';renderInspectionDashboard()}
-function hasOpenBaseEntry(v){const latest=baseEventsCache.find(e=>plateNorm(e.plate)===plateNorm(v.plate));return !!latest&&latest.event_type==='entrada'&&normStatus(v)==='Na base'}
-function latestBaseRecord(v){return baseRecordsCache.find(x=>plateNorm(x.plate)===plateNorm(v.plate))||null}
+function hasOpenBaseEntry(v){const latest=baseEventsCache.find(e=>plateNorm(e.plate)===plateNorm(v.plate));const record=latestBaseRecord(v);return !!latest&&latest.event_type==='entrada'&&normStatus(v)==='Na base'&&String(record?.reason||'').trim().toLocaleLowerCase('pt-BR')==='aguardando chamado oficina'}
+function latestBaseRecord(v){return baseRecordsCache.filter(x=>(String(x.vehicle_id)===String(v.id))||plateNorm(x.plate)===plateNorm(v.plate)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0]||null}
 function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLocaleLowerCase('pt-BR');const owner=managementOwner(v)||'';const match=!q||String(v.plate||'').toLocaleLowerCase('pt-BR').includes(q)||String(v.leader_name||'').toLocaleLowerCase('pt-BR').includes(q)||owner.toLocaleLowerCase('pt-BR').includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina'||hasOpenBaseEntry(v);if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return isManagementVehicle(v);if(fleetView==='lideres')return !isManagementVehicle(v);return true})}
 function vehicleEditor(v){
  const card=document.createElement('div');card.className='vehicle-card';
@@ -345,8 +345,8 @@ function vehicleEditor(v){
  const statusClass=status==='Apto'?'good':status==='Não apto'?'bad':'pending';
  card.innerHTML=`
  <div class="vehicle-summary">
-  <div class="vehicle-summary-main"><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(owner||leaderValue||'Sem líder definido')}${status==='Na oficina'?' · Oficina: '+escapeHtml(v.workshop_name||'Não informada')+' · Envio: '+escapeHtml(v.sent_to_workshop_at||'Não informado'):''}${status==='Na base'?' · Veículo registrado na base':''}${pendingWorkshop?' · Aguardando classificação para oficina':''}</div></div>
-  <div class="bar"><span class="pill ${statusClass}">${pendingWorkshop?'Aguardando oficina':escapeHtml(status)}</span><button class="secondary small-btn vehicle-edit-toggle" type="button" data-toggle-edit="${v.id}">Editar</button></div>
+  <div class="vehicle-summary-main"><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(owner||leaderValue||'Sem líder definido')}${status==='Na oficina'?' · Oficina: '+escapeHtml(v.workshop_name||'Não informada')+' · Envio: '+escapeHtml(v.sent_to_workshop_at||'Não informado'):''}${status==='Na base'?' · Veículo registrado na base':''}${pendingWorkshop?' · Aguardando chamado da oficina':''}</div></div>
+  <div class="bar"><span class="pill ${statusClass}">${pendingWorkshop?'Aguardando chamado oficina':escapeHtml(status)}</span><button class="secondary small-btn vehicle-edit-toggle" type="button" data-toggle-edit="${v.id}">Editar</button></div>
  </div>
  ${baseRecord?`<div class="muted">Líder: ${escapeHtml(baseRecord.leader_name)} · Motivo: ${escapeHtml(baseRecord.reason)}</div>`:''}
  <div class="vehicle-edit-fields" id="edit-fields-${v.id}" hidden>
@@ -373,7 +373,7 @@ async function registerBaseVehicle(){
  else{const {data,error}=await db.from('vehicles').insert({plate,company:'Águas do Rio',status:'Na base',leader_name:leader,status_updated_at:new Date().toISOString()}).select('id').single();if(error)throw error;v={id:data.id,plate,status:'Na base'}}
  const ext=(photo.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg',path='na-base/'+v.id+'/'+Date.now()+'.'+ext;const {error:upErr}=await db.storage.from('frota360-fotos').upload(path,photo,{contentType:photo.type,upsert:false});if(upErr)throw upErr;
  const {error:recErr}=await db.from('vehicle_base_records').insert({vehicle_id:v.id,plate,leader_name:leader,reason,photo_path:path});if(recErr)throw recErr;
- const {error:eventErr}=await db.from('vehicle_base_events').insert({vehicle_id:v.id,plate,event_type:'entrada',previous_status:previousStatus,event_at:new Date().toISOString()});if(eventErr)throw eventErr;message('appMsg','Veículo registrado. Ele já aparece na aba Oficina como aguardando classificação; só será contabilizado na Oficina quando você editar a situação para “Na oficina”.','success');await loadFleet();fleetView='oficina';$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.fleetView==='oficina'));await renderVehicles()
+ const {error:eventErr}=await db.from('vehicle_base_events').insert({vehicle_id:v.id,plate,event_type:'entrada',previous_status:previousStatus,event_at:new Date().toISOString()});if(eventErr)throw eventErr;message('appMsg',reason==='Aguardando chamado oficina'?'Veículo registrado na base e sinalizado na aba Oficina como aguardando chamado.':'Veículo registrado na base. Ele ficará somente na aba Na base.','success');await loadFleet();fleetView='base';$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.fleetView==='base'));await renderVehicles()
  }catch(err){message('appMsg','Não foi possível registrar: '+err.message,'error')}finally{btn.disabled=false;btn.textContent='Registrar veículo na base'}
 }
 async function removeBaseVehicle(id){
@@ -391,7 +391,7 @@ async function removeBaseVehicle(id){
 async function renderVehicles(){
  const box=$('vehiclesList');box.innerHTML='';
  const list=filteredVehicles();
- if(fleetView==='oficina'){const note=document.createElement('div');note.className='status';note.textContent='Veículos recém-registrados em “Na base” também aparecem aqui como aguardando classificação. Eles só entram nos indicadores e gráficos de Oficina depois que a situação for editada para “Na oficina”.';box.appendChild(note)}
+ if(fleetView==='oficina'){const note=document.createElement('div');note.className='status';note.textContent='Nesta lista aparecem os veículos efetivamente “Na oficina” e somente os veículos da base cujo motivo foi marcado como “Aguardando chamado oficina”. Os demais veículos da base não aparecem aqui.';box.appendChild(note)}
  if(fleetView==='base'){ 
   const entry=document.createElement('div');
   entry.className='record';
@@ -419,7 +419,26 @@ async function renderVehicles(){
    const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details);
   }
  }else list.forEach(v=>{const card=vehicleEditor(v);if(fleetView==='base'){const action=document.createElement('div');action.className='bar';action.style.marginTop='10px';action.innerHTML=`<button type="button" class="small-btn secondary" data-remove-base="${v.id}">Retirar da lista (manter histórico)</button>`;card.appendChild(action)}box.appendChild(card)});
- if(fleetView==='base'){for(const card of box.querySelectorAll('.vehicle-card')){const plate=card.querySelector('h3')?.textContent,rec=baseRecordsCache.find(x=>plateNorm(x.plate)===plateNorm(plate||''));if(rec?.photo_path){const {data:file,error:photoError}=await db.storage.from('frota360-fotos').createSignedUrl(rec.photo_path,3600);if(file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.loading='lazy';img.src=file.signedUrl;img.alt='Foto do veículo '+plate;img.onclick=()=>openPhotoViewer(file.signedUrl,'Veículo '+plate);const caption=document.createElement('div');caption.className='base-photo-caption';caption.textContent='Foto do veículo · toque na imagem para ampliar';card.insertBefore(img,card.querySelector('.vehicle-edit-fields'));card.insertBefore(caption,card.querySelector('.vehicle-edit-fields'))}else{const warning=document.createElement('div');warning.className='status error';warning.textContent='Foto cadastrada, mas não foi possível carregar a imagem'+(photoError?.message?': '+photoError.message:'')+'.';card.insertBefore(warning,card.querySelector('.vehicle-edit-fields'))}}}}
+ if(fleetView==='base'){
+  for(const v of list){
+   const card=[...box.querySelectorAll('.vehicle-card')].find(el=>el.querySelector('[data-save-vehicle]')?.dataset.saveVehicle===String(v.id));
+   if(!card)continue;
+   const rec=baseRecordsCache.filter(x=>String(x.vehicle_id)===String(v.id)||plateNorm(x.plate)===plateNorm(v.plate)).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0))[0];
+   if(!rec?.photo_path)continue;
+   const anchor=card.querySelector('.vehicle-summary')||card.firstChild;
+   const photoBox=document.createElement('div');photoBox.className='base-photo-loading status';photoBox.textContent='Carregando foto do veículo...';
+   card.insertBefore(photoBox,anchor);
+   try{
+    const {data:file,error:photoError}=await db.storage.from('frota360-fotos').createSignedUrl(rec.photo_path,3600);
+    if(photoError)throw photoError;
+    if(!file?.signedUrl)throw new Error('O Supabase não retornou o endereço da foto.');
+    const img=document.createElement('img');img.className='photo-full';img.loading='eager';img.src=file.signedUrl;img.alt='Foto do veículo '+v.plate;img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Veículo '+v.plate));
+    img.addEventListener('error',()=>{photoBox.className='status error';photoBox.textContent='A foto está cadastrada, mas o navegador não conseguiu carregar o arquivo. Verifique o acesso ao bucket frota360-fotos.';img.remove()},{once:true});
+    const caption=document.createElement('div');caption.className='base-photo-caption';caption.textContent='Foto do veículo · toque na imagem para ampliar';
+    photoBox.replaceWith(img);img.insertAdjacentElement('afterend',caption);
+   }catch(photoError){photoBox.className='status error';photoBox.textContent='Não foi possível abrir a foto: '+(photoError?.message||'erro desconhecido')+'. O registro da foto foi localizado.';}
+  }
+ }
  box.querySelectorAll('[data-remove-base]').forEach(btn=>btn.addEventListener('click',()=>removeBaseVehicle(btn.dataset.removeBase)));
  box.querySelectorAll('[data-toggle-edit]').forEach(btn=>btn.addEventListener('click',()=>{
   const fields=$('edit-fields-'+btn.dataset.toggleEdit);const opening=fields.hidden;fields.hidden=!opening;btn.textContent=opening?'Fechar':'Editar';
