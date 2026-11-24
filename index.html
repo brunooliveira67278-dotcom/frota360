@@ -1,4 +1,4 @@
-<!doctype html>
+ <!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
@@ -38,8 +38,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 .chart-track{height:15px;background:#edf2f5;border-radius:20px;overflow:hidden}.chart-fill{height:100%;border-radius:20px;min-width:0}.chart-fill.apto{background:#22a06b}.chart-fill.oficina{background:#e39a2d}
 .vehicle-card{border:1px solid var(--line);border-radius:12px;padding:15px;margin:12px 0}.vehicle-card h3{margin:0;color:var(--navy)}
 .vehicle-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
-/* Interface administrativa mais limpa */
-#tab-fleet .metric-grid,#tab-fleet .record:has(.chart-row){display:none}
+/* Interface administrativa: manter indicadores e gráficos do painel visíveis */
 #tab-fleet .record{box-shadow:none;border-color:transparent;padding:8px 0}
 #tab-fleet .vehicle-card{background:#fff;box-shadow:none}
 #tab-fleet .vehicle-card .field{margin:8px 0}
@@ -98,11 +97,24 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 <div id="adminArea" class="hidden"><div class="panel">
 <h2>Painel administrativo</h2><div class="muted">Acompanhamento da frota, histórico de inspeções e gestão de usuários.</div>
 <div class="tabs">
-<button class="active" data-tab="fleet">Situação da frota</button><button data-tab="history">Histórico</button><button data-tab="users">Usuários</button>
+<button class="active" data-tab="fleet">Painel geral e frota</button><button data-tab="history">Histórico de inspeções</button><button data-tab="users">Usuários</button>
 </div>
 
 <div id="tab-fleet">
-<div class="bar"><strong>Resumo da frota</strong><button class="secondary" id="refreshFleet">Atualizar painel</button></div>
+<div class="bar"><strong>Painel gerencial da frota</strong><div class="bar"><label class="muted" for="dashboardPeriod">Período das inspeções</label><select id="dashboardPeriod" style="padding:10px;border:1px solid #cbd9e0;border-radius:9px"><option value="month">Mês atual</option><option value="all">Todo o histórico</option></select><button class="secondary" id="refreshFleet">Atualizar painel</button></div></div>
+<div class="metric-grid five" style="margin-top:12px">
+<div class="metric"><div class="muted">Checklists recebidos</div><div class="counter" id="dashInspections">0</div></div>
+<div class="metric"><div class="muted">Placas inspecionadas</div><div class="counter" id="dashDistinct">0</div></div>
+<div class="metric"><div class="muted">Veículos sem inspeção</div><div class="counter" id="dashMissing">0</div></div>
+<div class="metric"><div class="muted">Frota inspecionada</div><div class="counter" id="dashCoverage">0%</div></div>
+<div class="metric"><div class="muted">Não conformidades</div><div class="counter" id="dashBad">0</div></div>
+</div>
+<div class="grid" style="margin-top:12px">
+<div class="record"><h3>Itens com mais não conformidades</h3><div id="dashRanking" class="muted">Carregando dados...</div></div>
+<div class="record"><h3>Alertas de veículos</h3><div id="dashAlerts" class="muted">Carregando dados...</div></div>
+</div>
+<div class="record"><h3>Inspeções por mês</h3><div id="dashTrend" class="muted">Carregando dados...</div></div>
+<div class="bar"><strong>Resumo da frota</strong><span class="muted">Cada placa é contabilizada uma única vez</span></div>
 <div class="metric-grid five" style="margin-top:12px">
 <div class="metric apto"><div class="muted">Total de veículos</div><div class="counter" id="countTotal">0</div></div>
 <div class="metric apto"><div class="muted">Aptos</div><div class="counter" id="countApto">0</div></div>
@@ -125,7 +137,7 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 <div id="vehiclesList" class="muted">Carregando veículos...</div>
 </div>
 
-<div id="tab-history" class="hidden"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div>
+<div id="tab-history" class="hidden"><div class="bar"><strong>Inspeções registradas</strong><button class="secondary" id="refreshHistory">Atualizar</button></div><div class="field"><label for="historySearch">Buscar por placa, equipe ou líder</label><input id="historySearch" placeholder="Digite a placa, equipe ou líder"></div>
 <div id="historyList" class="muted" style="margin-top:12px">Carregando registros...</div><div id="historyDetail" class="hidden" style="margin-top:16px"></div></div>
 
 <div id="tab-users" class="hidden"><h3>Cadastro de usuários</h3>
@@ -142,7 +154,7 @@ const SUPABASE_KEY='sb_publishable_zDxR_mdhlR_f_eJuesZyFw_ziI3Uzie';
 const FUNCTION_URL=SUPABASE_URL+'/functions/v1/hyper-endpoint';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const items=['Pneus','Faróis e lanternas','Retrovisores','Para-brisa e vidros','Limpeza e organização','Estepe','Macaco','Chave de roda','Triângulo'];
-let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null;
+let currentUser=null,currentProfile=null,vehiclesCache=[],fleetChannel=null,inspectionsCache=[],dashboardPeriod="month";
 const $=id=>document.getElementById(id);
 const isPublicForm=new URLSearchParams(location.search).get('form')==='equipes';
 
@@ -202,13 +214,23 @@ await Promise.all([loadHistory(),loadFleet()]);startFleetRealtime();
 }
 
 /* HISTÓRICO E FOTOS — MANTIDOS */
-async function getInspections(){const {data,error}=await db.from('inspections').select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false});if(error)throw error;const rows=data||[];if(!rows.length)return rows;const ids=rows.map(r=>r.id);const extra=await db.from('inspection_additional_issues').select('id,inspection_id,issue_type,description,photo_path,created_at').in('inspection_id',ids).order('created_at',{ascending:true});if(extra.error)throw extra.error;const byInspection={};for(const issue of extra.data||[]){(byInspection[issue.inspection_id] ||= []).push(issue)}for(const row of rows)row.additional_issues=byInspection[row.id]||[];return rows}
+async function getInspections(){
+ const rows=[];let from=0,batchSize=500;
+ while(true){
+  const {data,error}=await db.from('inspections').select('id,team_name,vehicle_label,leader,collaborator_1,collaborator_2,inspection_date,status,inspection_items(id,item_name,result,observation,photo_path)').order('inspection_date',{ascending:false}).range(from,from+batchSize-1);
+  if(error)throw error;const page=data||[];rows.push(...page);if(page.length<batchSize)break;from+=batchSize;
+ }
+ if(!rows.length){inspectionsCache=[];return rows}
+ const byInspection={};
+ for(let i=0;i<rows.length;i+=500){const ids=rows.slice(i,i+500).map(r=>r.id);const extra=await db.from('inspection_additional_issues').select('id,inspection_id,issue_type,description,photo_path,created_at').in('inspection_id',ids).order('created_at',{ascending:true});if(extra.error)throw extra.error;for(const issue of extra.data||[])(byInspection[issue.inspection_id] ||= []).push(issue)}
+ for(const row of rows)row.additional_issues=byInspection[row.id]||[];inspectionsCache=rows;return rows
+}
 function formatInspectionDate(value){if(!value)return'Data não informada';const date=new Date(value);return Number.isNaN(date.getTime())?String(value):date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
 function openPhotoViewer(url,title){$('photoViewerImage').src=url;$('photoViewerImage').alt=title||'Foto ampliada';$('photoViewer').classList.remove('hidden')}
 function closePhotoViewer(){$('photoViewer').classList.add('hidden');$('photoViewerImage').src=''}
 async function renderInspectionRecord(r){
 const div=document.createElement('div');div.className='record';const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length;
-div.innerHTML=`<div class="bar"><div><h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3><div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div><div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div></div><span class="pill ${bad.length?'bad':'good'}">${bad.length} não conformidade(s)</span></div>`;
+div.innerHTML=`<div class="bar"><div><h3>${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.vehicle_label||'Veículo não informado')}</h3><div class="muted">Data: ${escapeHtml(formatInspectionDate(r.inspection_date))} · Líder: ${escapeHtml(r.leader||'Não informado')}</div><div class="muted">Colaboradores: ${escapeHtml([r.collaborator_1,r.collaborator_2].filter(Boolean).join(' / ')||'Não informados')}</div></div><span class="pill ${bad?'bad':'good'}">${bad} não conformidade(s)</span></div>`;
 for(const it of r.inspection_items||[]){const line=document.createElement('div');line.className='detail-item';line.innerHTML=`<strong>${escapeHtml(it.item_name)}</strong>: <span class="pill ${it.result==='Não conforme'?'bad':'good'}">${escapeHtml(it.result)}</span>${it.observation?' — '+escapeHtml(it.observation):''}`;
 if(it.photo_path){const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(it.photo_path,3600);if(!error&&file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.src=file.signedUrl;img.alt='Foto '+it.item_name;img.title='Clique para ampliar a foto';img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto '+it.item_name));line.appendChild(img)}else{const note=document.createElement('div');note.className='muted';note.textContent='Foto anexada, mas não foi possível abrir neste momento.';line.appendChild(note)}}div.appendChild(line)}
 if((r.additional_issues||[]).length){const heading=document.createElement('h3');heading.textContent='Problemas adicionais';div.appendChild(heading);for(const issue of r.additional_issues){const line=document.createElement('div');line.className='detail-item';line.innerHTML=`<strong>${escapeHtml(issue.issue_type||'Problema adicional')}</strong><div>${escapeHtml(issue.description||'Sem descrição')}</div><span class="pill bad">Não conforme</span>`;if(issue.photo_path){const {data:file,error}=await db.storage.from('frota360-fotos').createSignedUrl(issue.photo_path,3600);if(!error&&file?.signedUrl){const img=document.createElement('img');img.className='photo-full';img.src=file.signedUrl;img.alt='Foto do problema adicional';img.addEventListener('click',()=>openPhotoViewer(file.signedUrl,'Foto do problema adicional'));line.appendChild(img)}}div.appendChild(line)}}
@@ -220,8 +242,8 @@ $('historyList').classList.add('hidden');$('backHistory').addEventListener('clic
 $('historyDetailContent').appendChild(await renderInspectionRecord(row))}
 async function loadHistory(){
 const box=$('historyList'),detail=$('historyDetail');box.classList.remove('hidden');detail.classList.add('hidden');detail.innerHTML='';box.textContent='Carregando registros...';
-try{const rows=await getInspections();window.frotaHistoryRows=rows;if(!rows.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';
-for(const r of rows){const line=document.createElement('div');line.className='history-row';const info=document.createElement('div'),plate=document.createElement('button');plate.type='button';plate.className='plate-link';plate.textContent=r.vehicle_label||'Veículo não informado';plate.addEventListener('click',()=>showHistoryDetails(r.id));
+try{const rows=await getInspections();window.frotaHistoryRows=rows;renderInspectionDashboard();if(!rows.length){box.innerHTML='<p class="muted">Ainda não há inspeções registradas.</p>';return}box.innerHTML='';
+for(const r of rows){const search=($('historySearch')?.value||'').toLocaleLowerCase('pt-BR');const hay=[r.vehicle_label,r.team_name,r.leader].join(' ').toLocaleLowerCase('pt-BR');if(search&&!hay.includes(search))continue;const line=document.createElement('div');line.className='history-row';const info=document.createElement('div'),plate=document.createElement('button');plate.type='button';plate.className='plate-link';plate.textContent=r.vehicle_label||'Veículo não informado';plate.addEventListener('click',()=>showHistoryDetails(r.id));
 const meta=document.createElement('div');meta.className='history-meta';meta.textContent=(r.team_name||'Equipe não informada')+' · '+formatInspectionDate(r.inspection_date);const bad=(r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length;info.append(plate,meta);
 const status=document.createElement('span');status.className='pill '+(bad?'bad':'good');status.textContent=bad?bad+' não conformidade(s)':'Concluída';line.append(info,status);box.appendChild(line)}
 }catch(err){box.innerHTML='<div class="status error">Erro ao consultar: '+escapeHtml(err.message)+'</div>'}
@@ -255,20 +277,35 @@ function managementOwner(v){
  if(MANAGEMENT.includes(v.leader_name))return v.leader_name;
  return null;
 }
-function isManagementVehicle(v){return !!managementOwner(v)||v.vehicle_group==='Gestão'}
-async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;vehiclesCache=data||[];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'. Confira se executou a atualização SQL fornecida junto com este arquivo.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
+function isManagementVehicle(v){const owner=managementOwner(v);return MANAGEMENT.includes(owner)||(v.vehicle_group==='Gestão'&&!LEADERS.includes(owner||''))}
+async function loadFleet(){const box=$('vehiclesList');box.textContent='Carregando veículos...';try{const {data,error}=await db.from('vehicles').select('id,company,plate,status,workshop_reason,status_updated_at,leader_name,vehicle_group,workshop_name,maintenance_description,sent_to_workshop_at,workshop_return_at').order('plate',{ascending:true});if(error)throw error;const unique=new Map();for(const row of (data||[])){const key=plateNorm(row.plate)||('id:'+row.id);const old=unique.get(key);if(!old||new Date(row.status_updated_at||0)>=new Date(old.status_updated_at||0))unique.set(key,row)}vehiclesCache=[...unique.values()];renderFleetDashboard();renderVehicles()}catch(err){box.innerHTML='<div class="status error">Não foi possível carregar os veículos: '+escapeHtml(err.message)+'. Confira se executou a atualização SQL fornecida junto com este arquivo.</div>';message('appMsg','Falha ao carregar a frota: '+err.message,'error')}}
 function normStatus(v){return v.status||'Apto'}
-function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)'}
-function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLocaleLowerCase('pt-BR');const owner=managementOwner(v)||'';const match=!q||String(v.plate||'').toLocaleLowerCase('pt-BR').includes(q)||String(v.leader_name||'').toLocaleLowerCase('pt-BR').includes(q)||owner.toLocaleLowerCase('pt-BR').includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina';if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return isManagementVehicle(v);if(fleetView==='lideres')return LEADERS.includes(v.leader_name)||(!v.leader_name&&!isManagementVehicle(v));return true})}
+function inspectionBadCount(r){return (r.inspection_items||[]).filter(x=>x.result==='Não conforme').length+(r.additional_issues||[]).length}
+function plateNorm(value){return String(value||'').trim().toUpperCase().replace(/[^A-Z0-9]/g,'')}
+function currentPeriodRows(){if(dashboardPeriod==='all')return inspectionsCache;const now=new Date();return inspectionsCache.filter(r=>{const d=new Date(r.inspection_date);return !Number.isNaN(d.getTime())&&d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()})}
+function renderInspectionDashboard(){
+ const rows=currentPeriodRows(),fleetPlates=[...new Set(vehiclesCache.map(v=>plateNorm(v.plate)).filter(Boolean))],inspected=[...new Set(rows.map(r=>plateNorm(r.vehicle_label)).filter(Boolean))],missing=fleetPlates.filter(p=>!inspected.includes(p)),badTotal=rows.reduce((n,r)=>n+inspectionBadCount(r),0);
+ $('dashInspections').textContent=rows.length;$('dashDistinct').textContent=inspected.length;$('dashMissing').textContent=missing.length;$('dashCoverage').textContent=(fleetPlates.length?Math.round(inspected.filter(p=>fleetPlates.includes(p)).length/fleetPlates.length*100):0)+'%';$('dashBad').textContent=badTotal;
+ const ranking={};for(const r of rows){for(const it of r.inspection_items||[])if(it.result==='Não conforme')ranking[it.item_name]=(ranking[it.item_name]||0)+1;for(const it of r.additional_issues||[])ranking[it.issue_type||'Problema adicional']=(ranking[it.issue_type||'Problema adicional']||0)+1}
+ const rank=Object.entries(ranking).sort((a,b)=>b[1]-a[1]).slice(0,7);$('dashRanking').innerHTML=rank.length?rank.map(([name,n])=>`<div class="chart-row"><span>${escapeHtml(name)}</span><div class="chart-track"><div class="chart-fill oficina" style="width:${Math.max(4,n/Math.max(...rank.map(x=>x[1]))*100)}%"></div></div><strong>${n}</strong></div>`).join(''):'<span class="muted">Nenhuma não conformidade no período.</span>';
+ const latestByPlate={};for(const r of inspectionsCache){const key=plateNorm(r.vehicle_label);if(!key)continue;if(!latestByPlate[key]||new Date(r.inspection_date)>new Date(latestByPlate[key].inspection_date))latestByPlate[key]=r}
+ const alerts=Object.values(latestByPlate).filter(r=>inspectionBadCount(r)>0).sort((a,b)=>new Date(b.inspection_date)-new Date(a.inspection_date)).slice(0,6);
+ $('dashAlerts').innerHTML=alerts.length?alerts.map(r=>`<div class="history-row"><div><strong>${escapeHtml(r.vehicle_label||'Sem placa')}</strong><div class="history-meta">${escapeHtml(r.team_name||'Equipe não informada')} · ${escapeHtml(r.leader||'Líder não informado')}</div></div><span class="pill bad">${inspectionBadCount(r)} problema(s)</span></div>`).join(''):'<span class="muted">Nenhum veículo com não conformidade registrada.</span>';
+ const months=[];const now=new Date();for(let i=5;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'),label:d.toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}),count:0})}for(const r of inspectionsCache){const d=new Date(r.inspection_date);if(Number.isNaN(d.getTime()))continue;const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const m=months.find(x=>x.key===key);if(m)m.count++}const max=Math.max(1,...months.map(x=>x.count));$('dashTrend').innerHTML=months.map(m=>`<div class="chart-row"><span>${escapeHtml(m.label)}</span><div class="chart-track"><div class="chart-fill apto" style="width:${m.count/max*100}%"></div></div><strong>${m.count}</strong></div>`).join('');
+}
+
+function renderFleetDashboard(){const total=vehiclesCache.length,aptos=vehiclesCache.filter(v=>normStatus(v)==='Apto').length,oficina=vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length,nao=vehiclesCache.filter(v=>normStatus(v)==='Não apto').length,base=vehiclesCache.filter(v=>normStatus(v)==='Na base').length;$('countTotal').textContent=total;$('countApto').textContent=aptos;$('countOficina').textContent=oficina;$('countNaoApto').textContent=nao;$('countBase').textContent=base;$('chartApto').textContent=aptos;$('chartOficina').textContent=oficina;$('fleetTotal').textContent='Total: '+total+' veículo(s)';$('barApto').style.width=(total?aptos/total*100:0)+'%';$('barOficina').style.width=(total?oficina/total*100:0)+'%';$('vehicleCountLabel').textContent=total+' cadastrado(s)';renderInspectionDashboard()}
+function filteredVehicles(){return vehiclesCache.filter(v=>{const q=fleetSearch.toLocaleLowerCase('pt-BR');const owner=managementOwner(v)||'';const match=!q||String(v.plate||'').toLocaleLowerCase('pt-BR').includes(q)||String(v.leader_name||'').toLocaleLowerCase('pt-BR').includes(q)||owner.toLocaleLowerCase('pt-BR').includes(q);const st=normStatus(v);if(!match)return false;if(fleetView==='aptos')return st==='Apto';if(fleetView==='oficina')return st==='Na oficina';if(fleetView==='naoaptos')return st==='Não apto';if(fleetView==='base')return st==='Na base';if(fleetView==='gestao')return isManagementVehicle(v);if(fleetView==='lideres')return !isManagementVehicle(v);return true})}
 function vehicleEditor(v){
  const card=document.createElement('div');card.className='vehicle-card';
  const status=normStatus(v),owner=managementOwner(v),mapped=MANAGEMENT_VEHICLES[plateKey(v)]||LEADER_MANAGEMENT_VEHICLES[plateKey(v)];
- const groupValue=MANAGEMENT.includes(v.vehicle_group)?v.vehicle_group:(v.vehicle_group==='Gestão'?(owner||'Gestão'):(mapped?'Gestão':(v.vehicle_group||'')));
+ const mappedLeader=LEADERS.includes(mapped||'');
+ const groupValue=MANAGEMENT.includes(v.vehicle_group)?v.vehicle_group:(v.vehicle_group==='Gestão'?(owner||'Gestão'):(mapped?(mappedLeader?mapped:'Gestão'):(v.vehicle_group||'')));
  const leaderValue=v.leader_name||mapped||'';
  const statusClass=status==='Apto'?'good':status==='Não apto'?'bad':'pending';
  card.innerHTML=`
  <div class="vehicle-summary">
-  <div class="vehicle-summary-main"><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(owner||leaderValue||'Sem líder definido')}</div></div>
+  <div class="vehicle-summary-main"><h3>${escapeHtml(v.plate)}</h3><div class="muted">${escapeHtml(v.company||'Águas do Rio')} · ${escapeHtml(owner||leaderValue||'Sem líder definido')}${status==='Na oficina'?' · Oficina: '+escapeHtml(v.workshop_name||'Não informada')+' · Envio: '+escapeHtml(v.sent_to_workshop_at||'Não informado'):''}${status==='Na base'?' · Veículo registrado na base':''}</div></div>
   <div class="bar"><span class="pill ${statusClass}">${escapeHtml(status)}</span><button class="secondary small-btn vehicle-edit-toggle" type="button" data-toggle-edit="${v.id}">Editar</button></div>
  </div>
  <div class="vehicle-edit-fields" id="edit-fields-${v.id}" hidden>
@@ -293,19 +330,18 @@ function renderVehicles(){
  if(fleetView==='naoaptos'){regSummary.textContent='＋ Cadastrar veículo não apto';regButton.textContent='Cadastrar como Não apto'}
  else{regSummary.textContent='＋ Cadastrar veículo';regButton.textContent='Cadastrar veículo'}
  if(!list.length){box.innerHTML='<p class="muted">Nenhum veículo encontrado nesta área.</p>';return}
- if(fleetView==='oficina')box.appendChild(renderWorkshopTable(list));
- if(fleetView==='lideres'||fleetView==='gestao'||fleetView==='todos'){
-  const groups=fleetView==='gestao'?[...MANAGEMENT,...LEADERS]:fleetView==='lideres'?LEADERS:['Rafael','Maycon','Marlon Generoso','Emerson','Ricardo','Daniel',...MANAGEMENT,'Outros veículos'];
+ if(fleetView==='lideres'||fleetView==='gestao'||fleetView==='todos'){ 
+  const dynamicOwners=[...new Set(list.map(v=>managementOwner(v)||v.leader_name).filter(x=>x&&x!=='Gestão'))];const groups=fleetView==='gestao'?[...new Set([...MANAGEMENT,...dynamicOwners.filter(x=>MANAGEMENT.includes(x)),'Gestão sem responsável'])]:fleetView==='lideres'?[...new Set([...LEADERS,...dynamicOwners.filter(x=>!MANAGEMENT.includes(x)),'Sem líder'])]:[...new Set([...LEADERS,...MANAGEMENT,...dynamicOwners,'Outros veículos'])];
   for(const g of groups){
    const rows=list.filter(v=>{
-    if(g==='Outros veículos')return !LEADERS.includes(v.leader_name)&&!isManagementVehicle(v);
-    if(fleetView==='gestao')return managementOwner(v)===g;
-    if(fleetView==='lideres')return v.leader_name===g;
-    return managementOwner(v)===g||v.vehicle_group===g||v.leader_name===g;
+    if(g==='Outros veículos')return !managementOwner(v)&&!v.leader_name;
+    if(fleetView==='gestao')return (managementOwner(v)||v.leader_name||'Gestão sem responsável')===g || (g==='Gestão sem responsável'&&isManagementVehicle(v));
+    if(fleetView==='lideres')return (managementOwner(v)||v.leader_name||'Sem líder')===g;
+    const owner=managementOwner(v)||v.leader_name||'Outros veículos';return owner===g;
    });
    if(!rows.length)continue;
    const details=document.createElement('details');details.className='fleet-group';details.open=false;
-   details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s)</summary><div class="fleet-group-content"></div>`;
+   const counts={apto:rows.filter(v=>normStatus(v)==='Apto').length,oficina:rows.filter(v=>normStatus(v)==='Na oficina').length,nao:rows.filter(v=>normStatus(v)==='Não apto').length,base:rows.filter(v=>normStatus(v)==='Na base').length};details.innerHTML=`<summary>${escapeHtml(g)} · ${rows.length} veículo(s) <span class="muted">| Aptos: ${counts.apto} · Oficina: ${counts.oficina} · Não aptos: ${counts.nao} · Base: ${counts.base}</span></summary><div class="fleet-group-content"></div>`;
    const content=details.querySelector('.fleet-group-content');rows.forEach(v=>content.appendChild(vehicleEditor(v)));box.appendChild(details);
   }
  }else list.forEach(v=>box.appendChild(vehicleEditor(v)));
@@ -345,7 +381,7 @@ function startFleetRealtime(){if(fleetChannel)db.removeChannel(fleetChannel);fle
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();hide('loginMsg');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){message('loginMsg','Não foi possível entrar: '+error.message,'error');return}await showApp(data.session)});
 $('logoutBtn').addEventListener('click',async()=>{if(fleetChannel)await db.removeChannel(fleetChannel);await db.auth.signOut();location.reload()});
 $('publicForm').addEventListener('submit',submitPublicForm);$('refreshHistory').addEventListener('click',loadHistory);$('refreshFleet').addEventListener('click',loadFleet);$('vehicleForm').addEventListener('submit',registerVehicle);
-$('fleetSearch').addEventListener('input',e=>{fleetSearch=e.target.value;renderVehicles()});$('fleetSubtabs').addEventListener('click',e=>{const b=e.target.closest('[data-fleet-view]');if(!b)return;fleetView=b.dataset.fleetView;$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));renderVehicles()});$('closePhotoViewer').addEventListener('click',closePhotoViewer);$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer')closePhotoViewer()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer()});
+$('fleetSearch').addEventListener('input',e=>{fleetSearch=e.target.value;renderVehicles()});$('dashboardPeriod').addEventListener('change',e=>{dashboardPeriod=e.target.value;renderInspectionDashboard()});$('historySearch').addEventListener('input',()=>loadHistory());$('fleetSubtabs').addEventListener('click',e=>{const b=e.target.closest('[data-fleet-view]');if(!b)return;fleetView=b.dataset.fleetView;$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));renderVehicles()});$('closePhotoViewer').addEventListener('click',closePhotoViewer);$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer')closePhotoViewer()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['fleet','history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='history')loadHistory();if(b.dataset.tab==='fleet')loadFleet()}));
 
 /* INICIALIZAÇÃO */
