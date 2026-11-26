@@ -127,14 +127,17 @@ button.secondary{background:#e8f1f5;color:var(--navy)}button.danger{background:#
 <div class="chart-row"><span>Na oficina</span><div class="chart-track"><div id="barOficina" class="chart-fill oficina"></div></div><strong id="chartOficina">0</strong></div><div class="chart-row"><span>Não aptos</span><div class="chart-track"><div id="barNaoApto" class="chart-fill nao"></div></div><strong id="chartNaoApto">0</strong></div><div class="chart-row"><span>Na base</span><div class="chart-track"><div id="barBase" class="chart-fill base"></div></div><strong id="chartBase">0</strong></div><div class="muted" id="fleetTotal">Total: 0 veículos</div></div>
 <div class="record"><h3>Tempo de permanência — Base e Oficina</h3><p class="muted">Clique para consultar os veículos que mais permaneceram em cada situação, incluindo períodos já encerrados.</p><div class="grid"><button type="button" class="secondary" id="showBaseRanking">Ver ranking — Na base</button><button type="button" class="secondary" id="showWorkshopRanking">Ver ranking — Oficina</button></div><div id="statusDurationRanking" class="muted" style="margin-top:12px">Selecione um dos rankings para consultar.</div></div>
 
-<details class="registration-box" id="vehicleRegistration"><summary id="vehicleRegistrationSummary">＋ Cadastrar veículo</summary><form id="vehicleForm">
-<div class="grid"><div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required></div>
-<div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div></div>
-<button type="submit" id="saveVehicleBtn">Cadastrar veículo</button></form></details>
+<div id="vehicleRegistrationHome" style="display:none"><details class="registration-box" id="vehicleRegistration"><summary id="vehicleRegistrationSummary">＋ Cadastrar veículo</summary><form id="vehicleForm">
+<div class="grid"><div class="field"><label>Placa / Identificação *</label><input id="vehiclePlate" placeholder="Ex.: ABC1D23" required autocomplete="off"></div>
+<div class="field"><label>Empresa / Unidade</label><input id="vehicleCompany" value="Águas do Rio"></div>
+<div class="field"><label>Líder responsável *</label><select id="vehicleLeader" required><option value="">Selecione o líder</option><option value="Rafael">Rafael</option><option value="Maycon">Maycon</option><option value="Marlon Generoso">Marlon Generoso</option><option value="Emerson">Emerson</option><option value="Ricardo">Ricardo</option><option value="Daniel">Daniel</option><option value="Supervisor Alamino">Supervisor Alamino</option><option value="Supervisor Ivonildo">Supervisor Ivonildo</option><option value="Coordenador Arthur">Coordenador Arthur</option></select></div>
+<div class="field"><label>Situação inicial *</label><select id="vehicleInitialStatus" required><option value="Apto">Apto</option><option value="Na oficina">Na oficina</option><option value="Aguardando chamado/Oficina">Aguardando chamado/Oficina</option></select></div></div>
+<div class="field" id="vehicleServiceField" style="display:none"><label id="vehicleServiceLabel">Motivo / serviço *</label><textarea id="vehicleService" placeholder="Descreva o serviço ou chamado solicitado"></textarea></div>
+<button type="submit" id="saveVehicleBtn">Cadastrar veículo</button></form></details></div>
 <div class="bar"><h3>Gestão de veículos</h3><span class="muted" id="vehicleCountLabel"></span></div>
 <div class="field fleet-search"><label>Buscar por placa ou líder</label><input id="fleetSearch" placeholder="Digite a placa ou nome do líder"></div>
 <div class="fleet-subtabs" id="fleetSubtabs">
-<button type="button" class="active" data-fleet-view="todos">Todos os veículos</button><button type="button" data-fleet-view="oficina">Oficina</button><button type="button" data-fleet-view="aguardando">Aguardando chamado/Oficina</button><button type="button" data-fleet-view="aptos">Aptos</button><button type="button" data-fleet-view="naoaptos">Não aptos</button><button type="button" data-fleet-view="base">Na base</button><button type="button" data-fleet-view="excluir">Excluir veículos</button>
+<button type="button" class="active" data-fleet-view="todos">Todos os veículos</button><button type="button" data-fleet-view="oficina">Oficina</button><button type="button" data-fleet-view="aguardando">Aguardando chamado/Oficina</button><button type="button" data-fleet-view="aptos">Aptos</button><button type="button" data-fleet-view="naoaptos">Não aptos</button><button type="button" data-fleet-view="base">Na base</button><button type="button" data-fleet-view="cadastro">Cadastrar veículos</button><button type="button" data-fleet-view="excluir">Excluir veículos</button>
 </div>
 <div id="vehiclesList" class="muted">Carregando veículos...</div>
 </div>
@@ -423,9 +426,22 @@ async function removeBaseVehicle(id,fromAwaiting=false){
 }
 
 async function renderVehicles(){
- const box=$('vehiclesList');box.innerHTML='';
+ const box=$('vehiclesList');
+ const registration=$('vehicleRegistration'),registrationHome=$('vehicleRegistrationHome');
+ if(registration&&registration.parentElement===box)registrationHome.appendChild(registration);
+ box.innerHTML='';
  const list=filteredVehicles();
  const exportBar=document.createElement('div');exportBar.className='bar';exportBar.style.justifyContent='flex-end';exportBar.innerHTML='<button type="button" class="secondary small-btn" id="exportCurrentFleetView">Exportar esta aba em PDF</button>';box.appendChild(exportBar);exportBar.querySelector('button').addEventListener('click',()=>exportFleetPdf(fleetView));
+ if(fleetView==='cadastro'){
+  registration.open=true;
+  box.appendChild(registration);
+  $('vehicleRegistrationSummary').textContent='＋ Cadastro de veículos';
+  $('saveVehicleBtn').textContent='Cadastrar veículo';
+  return;
+ }
+ if(registration.parentElement!==registrationHome)registrationHome.appendChild(registration);
+ registration.open=false;
+ $('vehicleRegistrationSummary').textContent='＋ Cadastrar veículo';
  if(fleetView==='oficina'){const note=document.createElement('div');note.className='status';note.textContent='Somente veículos com situação atual “Na oficina”. Cada veículo tem edição e motivo/serviço junto à sua identificação.';box.appendChild(note)}
  if(fleetView==='aguardando'){const note=document.createElement('div');note.className='status';note.textContent='Veículos registrados na base com motivo “Aguardando chamado oficina”. Ao alterar a situação para “Na oficina”, eles sairão desta lista e passarão para a aba Oficina.';box.appendChild(note);const form=document.createElement('div');form.className='record';form.innerHTML=`<h3>Registrar veículo aguardando chamado</h3><p class="muted">Informe a placa, o responsável, o serviço solicitado e uma foto do veículo.</p><div class="grid"><div class="field"><label>Placa / identificação *</label><input id="awaitPlate" placeholder="Ex.: ABC1D23"></div><div class="field"><label>Líder responsável *</label><input id="awaitLeader" placeholder="Nome do líder"></div><div class="field"><label>Foto do veículo *</label><input id="awaitPhoto" type="file" accept="image/*" capture="environment"></div><div class="field"><label>Serviço / chamado solicitado *</label><textarea id="awaitRequest" placeholder="Descreva o defeito ou serviço solicitado"></textarea></div></div><button type="button" id="registerAwaitingBtn">Registrar aguardando chamado</button>`;box.appendChild(form);$('registerAwaitingBtn').addEventListener('click',registerAwaitingVehicle)}
  if(fleetView==='base'){ 
@@ -436,9 +452,6 @@ async function renderVehicles(){
   $('registerBaseVehicleBtn').addEventListener('click',registerBaseVehicle);
   $('baseVehiclePlate').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();registerBaseVehicle()}});
  }
- const regSummary=$('vehicleRegistrationSummary'),regButton=$('saveVehicleBtn');
- if(fleetView==='naoaptos'){regSummary.textContent='＋ Cadastrar veículo não apto';regButton.textContent='Cadastrar como Não apto'}
- else{regSummary.textContent='＋ Cadastrar veículo';regButton.textContent='Cadastrar veículo'}
  if(!list.length){const empty=document.createElement('p');empty.className='muted';empty.textContent='Nenhum veículo encontrado nesta área.';box.appendChild(empty);return}
  if(fleetView==='todos'){
   const managementRows=list.filter(isFleetManagementVehicle);
@@ -514,12 +527,42 @@ async function saveVehicleStatus(id){
  finally{btn.disabled=false}
 }
 async function registerVehicle(e){
- e.preventDefault();const btn=$('saveVehicleBtn'),plate=$('vehiclePlate').value.trim().toUpperCase(),company=$('vehicleCompany').value.trim()||'Águas do Rio';
- const initialStatus=fleetView==='naoaptos'?'Não apto':'Apto';
+ e.preventDefault();
+ const btn=$('saveVehicleBtn');
+ const plate=$('vehiclePlate').value.trim().toUpperCase();
+ const company=$('vehicleCompany').value.trim()||'Águas do Rio';
+ const leader=$('vehicleLeader').value;
+ const selectedStatus=$('vehicleInitialStatus').value;
+ const description=$('vehicleService').value.trim();
+ if(!plate||!leader){message('appMsg','Informe a placa e selecione o líder responsável.','error');return}
+ if(selectedStatus!=='Apto'&&!description){message('appMsg','Informe obrigatoriamente o motivo ou serviço solicitado.','error');$('vehicleService').focus();return}
+ if(vehiclesCache.some(v=>plateNorm(v.plate)===plateNorm(plate))){message('appMsg','Esta placa já está cadastrada na frota. Use a edição do veículo existente.','error');return}
  btn.disabled=true;btn.textContent='Cadastrando...';
- try{const {error}=await db.from('vehicles').insert({plate,company,status:initialStatus,status_updated_at:new Date().toISOString()});if(error)throw error;$('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';message('appMsg',initialStatus==='Não apto'?'Veículo cadastrado como Não apto.':'Veículo cadastrado como Apto.','success');await loadFleet();if(initialStatus==='Não apto'){$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.fleetView==='naoaptos'));fleetView='naoaptos';renderVehicles()}}
- catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}
- finally{btn.disabled=false;btn.textContent=fleetView==='naoaptos'?'Cadastrar como Não apto':'Cadastrar veículo'}
+ const now=new Date(),iso=now.toISOString(),today=iso.slice(0,10);
+ try{
+  const isAwaiting=selectedStatus==='Aguardando chamado/Oficina';
+  const dbStatus=isAwaiting?'Na base':selectedStatus;
+  const vehiclePayload={plate,company,leader_name:leader,status:dbStatus,maintenance_description:description||null,workshop_reason:description||null,sent_to_workshop_at:selectedStatus==='Na oficina'?today:null,status_updated_at:iso};
+  const {data,error}=await db.from('vehicles').insert(vehiclePayload).select('id,plate').single();
+  if(error)throw error;
+  if(selectedStatus==='Na oficina'){
+   const {error:eventError}=await db.from('vehicle_status_events').insert({vehicle_id:data.id,plate,status:'Na oficina',event_type:'entrada',event_at:iso});
+   if(eventError)throw eventError;
+  }
+  if(isAwaiting){
+   const {error:recordError}=await db.from('vehicle_base_records').insert({vehicle_id:data.id,plate,leader_name:leader,reason:'Aguardando chamado oficina',photo_path:null});
+   if(recordError)throw recordError;
+   const {error:eventError}=await db.from('vehicle_base_events').insert({vehicle_id:data.id,plate,event_type:'entrada',previous_status:'Apto',event_at:iso});
+   if(eventError)throw eventError;
+  }
+  $('vehicleForm').reset();$('vehicleCompany').value='Águas do Rio';$('vehicleServiceField').style.display='none';$('vehicleService').required=false;
+  message('appMsg','Veículo cadastrado com sucesso e encaminhado para a lista correspondente.','success');
+  await loadFleet();
+  fleetView=isAwaiting?'aguardando':selectedStatus==='Na oficina'?'oficina':'todos';
+  $('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.fleetView===fleetView));
+  await renderVehicles();
+ }catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}
+ finally{btn.disabled=false;btn.textContent='Cadastrar veículo'}
 }
 function exportFleetPdf(scope='all'){
  const allGroups=[['Todos os veículos',vehiclesCache.filter(v=>!isHiddenTodosVehicle(v))],['Oficina',vehiclesCache.filter(v=>normStatus(v)==='Na oficina')],['Aguardando chamado/Oficina',vehiclesCache.filter(v=>hasOpenBaseEntry(v))],['Aptos',vehiclesCache.filter(v=>normStatus(v)==='Apto')],['Não aptos',vehiclesCache.filter(v=>normStatus(v)==='Não apto')],['Na base',vehiclesCache.filter(v=>normStatus(v)==='Na base'&&!isHiddenBaseVehicle(v))],['Veículos da gestão',vehiclesCache.filter(isFleetManagementVehicle)]];
@@ -547,6 +590,7 @@ async function registerFleetTeam(e){e.preventDefault();const team_name=$('teamRe
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();hide('loginMsg');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){message('loginMsg','Não foi possível entrar: '+error.message,'error');return}await showApp(data.session)});
 $('logoutBtn').addEventListener('click',async()=>{if(fleetChannel)await db.removeChannel(fleetChannel);await db.auth.signOut();location.reload()});
 $('publicForm').addEventListener('submit',submitPublicForm);$('refreshHistory').addEventListener('click',loadHistory);$('refreshFleet').addEventListener('click',loadFleet);$('vehicleForm').addEventListener('submit',registerVehicle);
+$('vehicleInitialStatus').addEventListener('change',()=>{const required=$('vehicleInitialStatus').value!=='Apto';$('vehicleServiceField').style.display=required?'block':'none';$('vehicleService').required=required;$('vehicleServiceLabel').textContent=$('vehicleInitialStatus').value==='Na oficina'?'Motivo / serviço da oficina *':'Serviço / chamado aguardando *';});
 $('teamRegisterForm').addEventListener('submit',registerFleetTeam);$('exportFleetPdf').addEventListener('click',()=>exportFleetPdf('all'));$('refreshTeams').addEventListener('click',loadTeamStatus);$('showBaseRanking').addEventListener('click',()=>showDurationRanking('base'));$('showWorkshopRanking').addEventListener('click',()=>showDurationRanking('workshop'));$('fleetSearch').addEventListener('input',e=>{fleetSearch=e.target.value;renderVehicles()});$('dashboardPeriod').addEventListener('change',e=>{dashboardPeriod=e.target.value;renderInspectionDashboard()});$('historySearch').addEventListener('input',()=>loadHistory());$('fleetSubtabs').addEventListener('click',e=>{const b=e.target.closest('[data-fleet-view]');if(!b)return;fleetView=b.dataset.fleetView;$('fleetSubtabs').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));renderVehicles()});$('closePhotoViewer').addEventListener('click',closePhotoViewer);$('photoViewer').addEventListener('click',e=>{if(e.target.id==='photoViewer')closePhotoViewer()});document.addEventListener('keydown',e=>{if(e.key==='Escape')closePhotoViewer()});
 document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['fleet','history','users'].forEach(t=>$('tab-'+t).classList.toggle('hidden',t!==b.dataset.tab));if(b.dataset.tab==='history')loadHistory();if(b.dataset.tab==='fleet')loadFleet();if(b.dataset.tab==='users')loadUsers()}));
 
