@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>AGUAS DO RIO - RECUPERAÇÃO DE CORTADOS - FROTA NEGOCIAE</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
 :root{--navy:#062b49;--blue:#087da5;--aqua:#19b8c6;--bg:#f2f6f8;--ink:#183244;--muted:#627786;--line:#dce6eb;--white:#fff;--red:#b42318;--green:#16794b;--orange:#a15c00}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--ink)}
@@ -415,13 +416,34 @@ async function registerAwaitingVehicle(){
 
 async function removeBaseVehicle(id,fromAwaiting=false){
  const v=vehiclesCache.find(x=>String(x.id)===String(id));if(!v)return;
- if(!confirm('Retirar '+v.plate+' da lista '+(fromAwaiting?'“Aguardando chamado/Oficina”':'“Na base”')+'? O registro de entrada será mantido no histórico.'))return;
+ if(!confirm('Retirar '+v.plate+' da lista '+(fromAwaiting?'“Aguardando chamado/Oficina”':'“Na base”')+'? O registro histórico será mantido.'))return;
  try{
-  const latest=baseEventsCache.find(e=>plateNorm(e.plate)===plateNorm(v.plate));
-  if(!latest||latest.event_type!=='entrada')throw new Error('Não foi encontrada uma entrada ativa para esta placa. Atualize a página e tente novamente.');
-  const {error:evError}=await db.from('vehicle_base_events').insert({vehicle_id:v.id,plate:v.plate,event_type:'saida',previous_status:latest.previous_status||'Apto',event_at:new Date().toISOString()});if(evError)throw evError;
-  const restoreStatus=latest.previous_status||'Apto';const {error}=await db.from('vehicles').update({status:restoreStatus,status_updated_at:new Date().toISOString()}).eq('id',v.id);if(error)throw error;
-  message('appMsg','Veículo '+v.plate+' retirado da lista. O histórico foi preservado.','success');await loadFleet();
+  // Consulta o evento mais recente pelo ID do veículo (mais confiável que comparar somente a placa).
+  let latest=null;
+  const byId=await db.from('vehicle_base_events').select('id,vehicle_id,plate,event_type,event_at,previous_status').eq('vehicle_id',v.id).order('event_at',{ascending:false}).limit(1).maybeSingle();
+  if(byId.error)throw byId.error;
+  latest=byId.data||null;
+  // Compatibilidade com registros antigos que foram gravados sem vehicle_id.
+  if(!latest){
+   const byPlate=await db.from('vehicle_base_events').select('id,vehicle_id,plate,event_type,event_at,previous_status').eq('plate',v.plate).order('event_at',{ascending:false}).limit(1).maybeSingle();
+   if(byPlate.error)throw byPlate.error;
+   latest=byPlate.data||null;
+  }
+  const record=latestBaseRecord(v);
+  const isBaseNow=normStatus(v)==='Na base';
+  // Só permite retirada se o veículo estiver na base e houver histórico ou registro de base que o comprove.
+  if(!isBaseNow)throw new Error('Este veículo não está marcado como Na base. Atualize a página e confira a situação.');
+  if(!latest&&!record)throw new Error('Não encontrei histórico nem registro de entrada na base para este veículo. Confira o cadastro antes de tentar novamente.');
+  const restoreStatus=(latest?.event_type==='entrada'?(latest.previous_status||'Apto'):(latest?.previous_status||'Apto'));
+  // Se já existir uma saída registrada, não duplica o evento; corrige somente a situação do veículo.
+  if(!latest||latest.event_type!=='saida'){
+   const {error:evError}=await db.from('vehicle_base_events').insert({vehicle_id:v.id,plate:v.plate,event_type:'saida',previous_status:restoreStatus,event_at:new Date().toISOString()});
+   if(evError)throw evError;
+  }
+  const {error:updateError}=await db.from('vehicles').update({status:restoreStatus,status_updated_at:new Date().toISOString()}).eq('id',v.id);
+  if(updateError)throw updateError;
+  message('appMsg','Veículo '+v.plate+' retirado da lista. O histórico foi preservado.','success');
+  await loadFleet();
  }catch(err){message('appMsg','Não foi possível retirar o veículo: '+err.message,'error')}
 }
 
@@ -564,7 +586,7 @@ async function registerVehicle(e){
  }catch(err){message('appMsg','Não foi possível cadastrar o veículo: '+err.message,'error')}
  finally{btn.disabled=false;btn.textContent='Cadastrar veículo'}
 }
-function exportFleetPdf(scope='all'){
+async function exportFleetPdf(scope='all'){
  const allGroups=[['Todos os veículos',vehiclesCache.filter(v=>!isHiddenTodosVehicle(v))],['Oficina',vehiclesCache.filter(v=>normStatus(v)==='Na oficina')],['Aguardando chamado/Oficina',vehiclesCache.filter(v=>hasOpenBaseEntry(v))],['Aptos',vehiclesCache.filter(v=>normStatus(v)==='Apto')],['Não aptos',vehiclesCache.filter(v=>normStatus(v)==='Não apto')],['Na base',vehiclesCache.filter(v=>normStatus(v)==='Na base'&&!isHiddenBaseVehicle(v))],['Veículos da gestão',vehiclesCache.filter(isFleetManagementVehicle)]];
  const names={todos:'Todos os veículos',daniel:'Daniel',oficina:'Oficina',aguardando:'Aguardando chamado/Oficina',aptos:'Aptos',naoaptos:'Não aptos',base:'Na base',gestao:'Veículos da gestão',lideres:'Veículos dos líderes',excluir:'Excluir veículos'};
  let statusGroups=scope==='all'?allGroups:allGroups.filter(([name])=>name===names[scope]);
@@ -577,8 +599,19 @@ function exportFleetPdf(scope='all'){
  const historyRows=inspectionsCache.map(r=>'<tr><td>'+escapeHtml(r.vehicle_label||'—')+'</td><td>'+escapeHtml(r.team_name||'—')+'</td><td>'+escapeHtml(r.leader||'—')+'</td><td>'+escapeHtml(formatInspectionDate(r.inspection_date))+'</td><td>'+inspectionBadCount(r)+'</td></tr>').join('');
  const historyHtml=scope==='all'?'<section class="print-section"><h2>Histórico de inspeções ('+inspectionsCache.length+')</h2><table class="print-table"><thead><tr><th>Veículo</th><th>Equipe</th><th>Líder</th><th>Data</th><th>Não conformidades</th></tr></thead><tbody>'+historyRows+'</tbody></table></section>':'';
  const title=scope==='all'?'Todas as abas':(names[scope]||'Relatório da frota');
- const win=window.open('','_blank');if(!win){message('appMsg','Permita pop-ups para gerar o relatório em PDF.','error');return}
- win.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Relatório Frota - '+escapeHtml(title)+'</title><style>body{font:12px Arial;color:#183244;margin:22px}h1{color:#062b49}h2{font-size:16px;color:#062b49;margin:12px 0 6px}h3{font-size:13px}.print-section{margin:18px 0;break-inside:avoid}.print-table{width:100%;border-collapse:collapse;font-size:10px}.print-table th,.print-table td{border:1px solid #cbd9e0;padding:5px;text-align:left}.chart-row{display:flex;gap:10px;margin:5px 0}.chart-track{height:10px;background:#edf2f5;flex:1}.chart-fill{height:10px;background:#087da5}</style></head><body><h1>ÁGUAS DO RIO — FROTA / RECUPERAÇÃO DE CORTADOS</h1><p>'+escapeHtml(title)+' · Relatório gerado em '+escapeHtml(new Date().toLocaleString('pt-BR'))+'</p>'+(scope==='all'?'<h2>Painel e gráficos</h2><p>Total de veículos: '+vehiclesCache.length+' · Aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Apto').length+' · Oficina: '+vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length+' · Aguardando chamado: '+vehiclesCache.filter(v=>hasOpenBaseEntry(v)).length+' · Não aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Não apto').length+' · Na base: '+vehiclesCache.filter(v=>normStatus(v)==='Na base').length+'</p>':'')+chartHtml+tables+historyHtml+'<script>window.onload=()=>{setTimeout(()=>window.print(),500)};<\/script></body></html>');win.document.close();
+ const report=document.createElement('div');
+ report.id='fleetPdfReport';
+ report.style.cssText='position:fixed;left:0;top:0;width:100%;max-width:1100px;padding:22px;background:#fff;color:#183244;font:12px Arial;z-index:99999;box-sizing:border-box;';
+ report.innerHTML='<style>#fleetPdfReport h1{color:#062b49;font-size:22px}#fleetPdfReport h2{font-size:16px;color:#062b49;margin:12px 0 6px}#fleetPdfReport h3{font-size:13px}#fleetPdfReport .print-section{margin:18px 0;break-inside:auto;page-break-inside:auto}#fleetPdfReport .print-table{width:100%;border-collapse:collapse;font-size:10px}#fleetPdfReport .print-table th,#fleetPdfReport .print-table td{border:1px solid #cbd9e0;padding:5px;text-align:left;vertical-align:top}#fleetPdfReport .chart-row{display:flex;gap:10px;margin:5px 0}#fleetPdfReport .chart-track{height:10px;background:#edf2f5;flex:1}#fleetPdfReport .chart-fill{height:10px;background:#087da5}#fleetPdfReport .record{margin:10px 0;padding:10px;border:1px solid #dce6eb;border-radius:8px}#fleetPdfReport table{page-break-inside:auto}#fleetPdfReport tr{page-break-inside:avoid;page-break-after:auto}</style><h1>ÁGUAS DO RIO — FROTA / RECUPERAÇÃO DE CORTADOS</h1><p><strong>'+escapeHtml(title)+'</strong> · Relatório gerado em '+escapeHtml(new Date().toLocaleString('pt-BR'))+'</p>'+(scope==='all'?'<h2>Painel e gráficos</h2><p>Total de veículos: '+vehiclesCache.length+' · Aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Apto').length+' · Oficina: '+vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length+' · Aguardando chamado: '+vehiclesCache.filter(v=>hasOpenBaseEntry(v)).length+' · Não aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Não apto').length+' · Na base: '+vehiclesCache.filter(v=>normStatus(v)==='Na base').length+'</p>':'')+chartHtml+tables+historyHtml;
+ document.body.appendChild(report);
+ if(typeof html2pdf==='undefined'){report.remove();message('appMsg','Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet e tente novamente.','error');return}
+ message('appMsg','Gerando PDF para baixar... aguarde.','success');
+ const safeName=String(title).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'').toLowerCase();
+ try{
+  await html2pdf().set({margin:[8,8,10,8],filename:'relatorio_frota_'+safeName+'.pdf',image:{type:'jpeg',quality:0.96},html2canvas:{scale:1.6,useCORS:true,backgroundColor:'#ffffff',scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:['tr']}}).from(report).save();
+  message('appMsg','PDF gerado. O arquivo foi enviado para a pasta de downloads do dispositivo.','success');
+ }catch(err){message('appMsg','Não foi possível gerar o PDF: '+(err?.message||'erro desconhecido'),'error')}
+ finally{report.remove()}
 }
 function startFleetRealtime(){if(fleetChannel)db.removeChannel(fleetChannel);fleetChannel=db.channel('frota360-vehicles-live').on('postgres_changes',{event:'*',schema:'public',table:'vehicles'},()=>loadFleet()).subscribe()}
 
