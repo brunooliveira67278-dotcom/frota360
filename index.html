@@ -601,14 +601,20 @@ async function exportFleetPdf(scope='all'){
  const title=scope==='all'?'Todas as abas':(names[scope]||'Relatório da frota');
  const report=document.createElement('div');
  report.id='fleetPdfReport';
- report.style.cssText='position:fixed;left:0;top:0;width:100%;max-width:1100px;padding:22px;background:#fff;color:#183244;font:12px Arial;z-index:99999;box-sizing:border-box;';
+ report.style.cssText='position:absolute;left:0;top:0;width:1100px;min-height:300px;padding:22px;background:#fff;color:#183244;font:12px Arial;z-index:99999;box-sizing:border-box;display:block;visibility:visible;opacity:1;overflow:visible;';
  report.innerHTML='<style>#fleetPdfReport h1{color:#062b49;font-size:22px}#fleetPdfReport h2{font-size:16px;color:#062b49;margin:12px 0 6px}#fleetPdfReport h3{font-size:13px}#fleetPdfReport .print-section{margin:18px 0;break-inside:auto;page-break-inside:auto}#fleetPdfReport .print-table{width:100%;border-collapse:collapse;font-size:10px}#fleetPdfReport .print-table th,#fleetPdfReport .print-table td{border:1px solid #cbd9e0;padding:5px;text-align:left;vertical-align:top}#fleetPdfReport .chart-row{display:flex;gap:10px;margin:5px 0}#fleetPdfReport .chart-track{height:10px;background:#edf2f5;flex:1}#fleetPdfReport .chart-fill{height:10px;background:#087da5}#fleetPdfReport .record{margin:10px 0;padding:10px;border:1px solid #dce6eb;border-radius:8px}#fleetPdfReport table{page-break-inside:auto}#fleetPdfReport tr{page-break-inside:avoid;page-break-after:auto}</style><h1>ÁGUAS DO RIO — FROTA / RECUPERAÇÃO DE CORTADOS</h1><p><strong>'+escapeHtml(title)+'</strong> · Relatório gerado em '+escapeHtml(new Date().toLocaleString('pt-BR'))+'</p>'+(scope==='all'?'<h2>Painel e gráficos</h2><p>Total de veículos: '+vehiclesCache.length+' · Aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Apto').length+' · Oficina: '+vehiclesCache.filter(v=>normStatus(v)==='Na oficina').length+' · Aguardando chamado: '+vehiclesCache.filter(v=>hasOpenBaseEntry(v)).length+' · Não aptos: '+vehiclesCache.filter(v=>normStatus(v)==='Não apto').length+' · Na base: '+vehiclesCache.filter(v=>normStatus(v)==='Na base').length+'</p>':'')+chartHtml+tables+historyHtml;
  document.body.appendChild(report);
  if(typeof html2pdf==='undefined'){report.remove();message('appMsg','Não foi possível carregar o gerador de PDF. Verifique a conexão com a internet e tente novamente.','error');return}
  message('appMsg','Gerando PDF para baixar... aguarde.','success');
  const safeName=String(title).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'_').replace(/^_|_$/g,'').toLowerCase();
  try{
-  await html2pdf().set({margin:[8,8,10,8],filename:'relatorio_frota_'+safeName+'.pdf',image:{type:'jpeg',quality:0.96},html2canvas:{scale:1.6,useCORS:true,backgroundColor:'#ffffff',scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:['tr']}}).from(report).save();
+  // Aguarda o navegador calcular o layout antes da captura; evita PDF branco em celulares.
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  if(!report.innerText.trim()||report.getBoundingClientRect().height<80)throw new Error('O relatório ficou sem conteúdo para exportar. Atualize o painel e tente novamente.');
+  const worker=html2pdf().set({margin:[8,8,10,8],filename:'relatorio_frota_'+safeName+'.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',windowWidth:1100,scrollX:0,scrollY:0,logging:false},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy'],avoid:['tr']}}).from(report).toPdf();
+  const pdf=await worker.get('pdf');
+  if(!pdf||pdf.internal.getNumberOfPages()<1)throw new Error('O gerador não criou páginas. Tente novamente.');
+  await worker.save();
   message('appMsg','PDF gerado. O arquivo foi enviado para a pasta de downloads do dispositivo.','success');
  }catch(err){message('appMsg','Não foi possível gerar o PDF: '+(err?.message||'erro desconhecido'),'error')}
  finally{report.remove()}
