@@ -616,12 +616,17 @@ async function exportFleetPdf(scope='all'){
  @media(max-width:700px){.preview-toolbar{align-items:flex-start;flex-direction:column}.preview-page{max-width:none;width:1100px;margin:10px 0;transform-origin:top left}}
  </style>`;
  preview.document.open();
- preview.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+' - Frota</title>'+previewStyles+'</head><body><div class="preview-toolbar"><div><strong>Pré-visualização do relatório</strong><div class="preview-hint">Confira os dados. Para salvar, toque em “Baixar PDF”.</div></div><button id="downloadFleetPdf" type="button">Baixar PDF</button></div><main class="preview-page"><div id="fleetPdfReport">'+report.innerHTML+'</div></main></body></html>');
+ preview.document.write('<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+escapeHtml(title)+' - Frota</title>'+previewStyles+'</head><body><div class="preview-toolbar"><div><strong>Pré-visualização do relatório</strong><div class="preview-hint">Confira os dados. Para salvar, toque em “Baixar PDF”.</div></div><button id="downloadFleetPdf" type="button" disabled>Carregando opção de PDF...</button></div><main class="preview-page"><div id="fleetPdfReport">'+report.innerHTML+'</div></main></body></html>');
  preview.document.close();
+ const pdfScript=preview.document.createElement('script');
+ pdfScript.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+ pdfScript.onload=()=>{const b=preview.document.getElementById('downloadFleetPdf');if(b){b.disabled=false;b.textContent='Baixar PDF'}};
+ pdfScript.onerror=()=>{const b=preview.document.getElementById('downloadFleetPdf');if(b){b.disabled=true;b.textContent='Falha ao carregar PDF';}};
+ preview.document.head.appendChild(pdfScript);
  preview.document.getElementById('downloadFleetPdf').addEventListener('click',async()=>{
   const btn=preview.document.getElementById('downloadFleetPdf');
-  const generator=window.html2pdf;
-  if(typeof generator!=='function'){preview.alert('Não foi possível carregar o gerador de PDF. Verifique sua conexão e atualize a página.');return}
+  const generator=preview.html2pdf;
+  if(typeof generator!=='function'){preview.alert('O gerador ainda está carregando. Aguarde alguns segundos e tente novamente.');return}
   btn.disabled=true;btn.textContent='Preparando PDF...';
   try{
    await new Promise(resolve=>preview.requestAnimationFrame(()=>preview.requestAnimationFrame(resolve)));
